@@ -13,7 +13,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://47.103.193.67:3307/stardust?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
     username: root
-    password: hongtao945
+    password: 123456
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       # 初始化配置
