@@ -14,6 +14,9 @@ Stardust是一个博客系统，后台基于Springboot + LayUi构建;
 
 > 目录结构
 
+![image](https://user-images.githubusercontent.com/68481442/141136292-91dcecae-06d5-47f0-94d5-5acb36a7d1ab.png)
+![image](https://user-images.githubusercontent.com/68481442/141136355-c0f5a993-9f39-4a35-895e-615c8827c261.png)
+![image](https://user-images.githubusercontent.com/68481442/141136409-32550524-1930-4431-93df-ccaef9806a09.png)
 
 
 #### 2. 构建镜像
