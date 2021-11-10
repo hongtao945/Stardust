@@ -4,27 +4,6 @@
 Stardust是一个博客系统，后台基于Springboot + LayUi构建;
 前台基于Vue3 + Vite + Typescript构建;
 
-#### 软件架构
-软件架构说明
-
-
-#### 安装教程
-
-##### 部署java应用
-
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
 
 
 ### 项目部署
