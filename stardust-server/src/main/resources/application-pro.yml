@@ -68,7 +68,7 @@ spring:
         max-wait: 10000ms # 最大连接阻塞等待时间，单位毫秒，默认 -1
         max-idle: 200 # 最大空闲连接，默认 8
         min-idle: 5
-    password: hongtao945
+    password: 123456
 
 user:
   base-avatar: https://img.ivsky.com/img/tupian/slides/202104/08/gouzai-012.jpg
