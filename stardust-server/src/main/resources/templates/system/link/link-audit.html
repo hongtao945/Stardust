@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑友链</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <input type="hidden" th:value="${link.linkId}" name="linkId"/>
+            <div class="layui-form-item">
+                <label class="layui-form-label">审核结果</label>
+                <div class="layui-input-block">
+                  <input type="radio" name="status" value="2" title="审核通过" checked>
+                  <input type="radio" name="status" value="0" title="不予通过">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="pear-btn pear-btn-primary pear-btn-sm" lay-submit="" lay-filter="link-audit">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="pear-btn pear-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+
+<script type="text/javascript">
+layui.use(['form','jquery'],function(){
+    let form = layui.form;
+    let $ = layui.jquery;
+
+    // 由于js是在header导入的 所以在这里需要手动刷新渲染select的数据
+    form.render();
+
+    form.on('submit(link-audit)', function(data){
+        $.ajax({
+            url:'/api/page/link/audit',
+            data:JSON.stringify(data.field),
+            dataType:'json',
+            contentType:'application/json',
+            type:'post',
+            success:function(result){
+                if(result.code == 200){
+                    layer.msg(result.message,{icon:1,time:1000},function(){
+                        parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                        parent.layui.table.reload("link-table");
+                    });
+                }else{
+                    layer.msg(result.message,{icon:2,time:1000});
+                }
+            }
+        })
+        return false;
+    });
+})
+</script>
+
+</body>
+</html>

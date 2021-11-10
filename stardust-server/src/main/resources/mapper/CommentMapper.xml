@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.CommentMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Comment">
+        <id column="comment_id" property="commentId" />
+        <result column="content" property="content" />
+        <result column="article_id" property="articleId" />
+        <result column="fid" property="fid" />
+        <result column="fcomment_nickname" property="fcommentNickname" />
+        <result column="nickname" property="nickname" />
+        <result column="browser" property="browser" />
+        <result column="os" property="os" />
+        <result column="request_ip" property="requestIp" />
+        <result column="address" property="address" />
+        <result column="is_delete" property="isDelete"/>
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        comment_id, content, article_id, fid, fcomment_nickname, nickname, browser, os, request_ip, address, is_delete, create_time
+    </sql>
+
+    <select id="getParentComments" resultType="com.lht.admin.pojo.Comment">
+        select <include refid="Base_Column_List"/> from t_comment c
+        where c.article_id = #{id} and c.fid = 0
+    </select>
+
+    <select id="getAllCommentsOfArticle" resultType="com.lht.admin.pojo.Comment">
+        select <include refid="Base_Column_List"/> from t_comment c
+        where c.article_id = #{id} and c.fid != 0
+    </select>
+
+    <select id="fuzzyGetMessageList" resultType="com.lht.admin.pojo.Comment">
+        select comment_id, content, article_id, fcomment_nickname, nickname, browser, os, request_ip, address, create_time from t_comment c
+        <if test="ew != null and ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+        order by comment_id desc
+    </select>
+
+    <select id="getNewestComments" resultType="com.lht.admin.vo.ConsoleCommentsVo">
+        SELECT
+            c.nickname,
+            c.content,
+            c.address,
+            a.title as articleTitle,
+            c.create_time
+        FROM
+            t_comment c
+            INNER JOIN t_article a ON c.article_id = a.article_id
+        ORDER BY
+            c.comment_id DESC
+            LIMIT 10
+    </select>
+
+
+</mapper>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.TagMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Tag">
+        <id column="tag_id" property="tagId" />
+        <result column="name" property="name" />
+        <result column="color" property="color" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        tag_id, name, color, create_time, update_time
+    </sql>
+
+    <select id="fuzzyGetTagList" resultMap="BaseResultMap">
+        SELECT
+            t.*,
+            count( ta.tag_id ) as articleCount
+        FROM
+            t_tag t
+            LEFT JOIN t_tag_article ta ON t.tag_id = ta.tag_id
+            <if test="ew != null and ew.emptyOfWhere == false">
+                ${ew.customSqlSegment}
+            </if>
+        GROUP BY
+            t.tag_id
+    </select>
+
+    <select id="selectByArticleId" resultMap="BaseResultMap">
+        select t.tag_id, t.name, t.color
+        from t_tag t
+        left join t_tag_article ta on t.tag_id = ta.tag_id
+        where ta.article_id = #{articleId}
+    </select>
+
+    <select id="getFrontTagList" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from t_tag
+    </select>
+
+    <select id="getAllTags" resultType="com.lht.admin.pojo.Tag">
+        SELECT
+            t.*,
+            COUNT( t.tag_id ) AS articleCount
+        FROM
+            t_tag t
+            INNER JOIN t_tag_article ta ON t.tag_id = ta.tag_id
+            INNER JOIN t_article a ON a.article_id = ta.article_id
+        WHERE
+            a.`status` = 2
+            AND a.published = 1
+        GROUP BY
+            t.tag_id
+        ORDER BY
+            articleCount DESC
+    </select>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        SELECT
+            COUNT( DISTINCT t.tag_id )
+        FROM
+            t_tag t
+            INNER JOIN t_tag_article ta ON t.tag_id = ta.tag_id
+            INNER JOIN t_article a ON ta.article_id = a.article_id
+        WHERE
+            a.`status` = 2
+            AND a.published = 1
+    </select>
+
+</mapper>

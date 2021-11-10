@@ -1,0 +1,19 @@
+version: '3'
+services:
+  stardust-server:
+    image: stardust-server:v1.0
+    ports:
+      - 8881:8881
+    volumes:
+      - /tmp/stardust/server/log:/log
+    privileged: true
+    environment:
+      - JAVA_OPTS=-Xms384m -Xmx384m
+      - JAR_ARG=--spring.profiles.active=pro
+  stardust-web:
+    image: stardust-web:v1.0
+    volumes:
+      - /tmp/stardust/web/log:/var/log/nginx
+    privileged: true
+    ports:
+      - 80:80

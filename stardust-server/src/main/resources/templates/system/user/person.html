@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head>
+    <meta charset="utf-8">
+    <th:block th:include="include :: header('个人信息')"/>
+    <link rel="stylesheet" th:href="@{/admin/css/other/person.css}"/>
+    <style>
+        .my-button-container {
+            display: flex;
+            justify-content: center;
+            margin: 10px auto;
+        }
+    </style>
+</head>
+<body class="pear-container">
+<div class="layui-row layui-col-space10">
+    <div class="layui-col-md3">
+        <div class="layui-card">
+            <div class="layui-card-body" style="padding: 25px;">
+                <div class="text-center layui-text">
+                    <div class="user-info-head" id="userInfoHead">
+                        <img src="" id="userAvatar" width="115px" height="115px" alt="">
+                    </div>
+                    <h2 style="padding-top: 20px;font-size: 20px;" sec:authentication="principal.user.nickname">
+                        就眠仪式</h2>
+                    <p style="padding-top: 8px;margin-top: 10px;font-size: 13.5px;">China ， 中国</p>
+                </div>
+            </div>
+            <div style="height: 45px;border-top: 1px whitesmoke solid;text-align: center;line-height: 45px;font-size: 13.5px;">
+                <span>今日事 ，今日毕</span>
+            </div>
+        </div>
+
+        <div class="layui-card">
+            <div class="layui-card-header">
+                公告归档
+            </div>
+            <div class="layui-card-body">
+                <ul class="list" th:each="notice:${pageVo.notices}">
+                    <li class="list-item">
+                        <span class="title" th:text="${notice.noticeContent}">优化代码格式</span>
+                        <span class="footer" th:text="${notice.createTime}">2020-06-04 11:28</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="layui-col-md9">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                个人信息
+            </div>
+            <div class="layui-card-body">
+                <form class="layui-form">
+                    <div class="main-container">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">账号</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="username" lay-verify="title" autocomplete="off"
+                                       placeholder="请输入标题"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">邮箱</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="email" lay-verify="title|email" autocomplete="off"
+                                       placeholder="请输入标题"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">昵称</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="nickname" lay-verify="title" autocomplete="off"
+                                       placeholder="请输入标题"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">备注</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="remark" lay-verify="title" autocomplete="off"
+                                       placeholder="请输入标题"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">创建时间</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="createTime" lay-verify="title" autocomplete="off"
+                                       placeholder="请输入标题" disabled="disabled"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">最后登录时间</label>
+                            <div class="layui-input-block">
+                                <input type="text" name="LoginTime" lay-verify="title" autocomplete="off"
+                                       placeholder="请输入标题" disabled="disabled"
+                                       class="layui-input">
+                            </div>
+                        </div>
+                        <div class="my-button-container">
+                            <button type="submit" class="pear-btn pear-btn-primary pear-btn-lg" lay-submit=""
+                                    lay-filter="user-save">
+                                <i class="layui-icon layui-icon-ok"></i>
+                                提交更新
+                            </button>
+                            <button type="reset" class="pear-btn pear-btn-lg" style="margin-left: 10px">
+                                <i class="layui-icon layui-icon-refresh"></i>
+                                重置
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<th:block th:include="include :: footer"/>
+<script type="text/javascript" th:inline="javascript">
+    layui.use(['jquery', 'element', 'layer'], function () {
+        let form = layui.form;
+        var layer = layui.layer,
+            $ = layui.jquery;
+
+        const user = JSON.parse(window.localStorage.getItem("userInfo"));
+        $('input[name="username"]').val(user.username);
+        $('input[name="email"]').val(user.email);
+        $('input[name="nickname"]').val(user.nickname);
+        $('input[name="remark"]').val(user.remark);
+        $('input[name="LoginTime"]').val(user.lastLoginTime);
+        $('input[name="createTime"]').val(user.createTime);
+
+        let MODULE_PATH = "/api/user";
+        $("#userAvatar").attr("src", user.avatar);
+
+        window.callback = function (data) {
+            layer.close(data.index);
+            $("#userAvatar").attr("src", data.newAvatar);
+            parent.layui.$(".layui-nav-img").attr("src", data.newAvatar);
+        }
+
+        $("#userAvatar").click(function () {
+            layer.open({
+                type: 2,
+                title: '更换图片',
+                shade: 0.1,
+                area: ["900px", "500px"],
+                content: MODULE_PATH + 'uploadProfile.html',
+                btn: ['确定', '取消'],
+                yes: function (index) {
+                    window['layui-layer-iframe' + index].submitForm();
+                }
+            });
+        });
+
+        form.on('submit(user-save)', function (data) {
+            const d = {
+                userId: user.userId,
+                username: data.field.username,
+                nickname: data.field.nickname,
+                email: data.field.email,
+                remark: data.field.remark
+            }
+            layer.confirm('确定要更新个人信息吗', {icon: 3, title:'提示'}, function () {
+                $.ajax({
+                    url: MODULE_PATH + '/update',
+                    data: JSON.stringify(d),
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    type: 'put',
+                    success: function (result) {
+                        if (result.code === 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                                $.ajax({
+                                    url: '/logout',
+                                    dataType: 'json',
+                                    type: 'get',
+                                    success: function() {
+                                        location.href = "/login.html";
+                                        return true;
+                                    }
+                                });
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                });
+            });
+            return false;
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.RoleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Role">
+        <id column="role_id" property="roleId" />
+        <result column="role_name" property="roleName" />
+        <result column="role_name_zh" property="roleNameZh" />
+        <result column="data_scope" property="dataScope"/>
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        role_id, role_name, role_name_zh, status, create_time, update_time, remark
+    </sql>
+
+    <select id="fuzzyGetRolesByPage" resultMap="BaseResultMap">
+        select u.role_id,u.role_name,u.role_name_zh,u.remark,u.status
+        from sys_role u
+        <where>
+            <if test="roleName != null and roleName != ''">
+                role_name like CONCAT('%', #{roleName}, '%')
+            </if>
+        </where>
+    </select>
+
+    <insert id="addRole" parameterType="com.lht.admin.pojo.Role" flushCache="true" useGeneratedKeys="true" keyProperty="roleId">
+        insert into sys_role(role_name, role_name_zh, create_time, update_time, remark, data_scope)
+        values (#{role.roleName}, #{role.roleNameZh}, now(), now(), #{role.remark}, #{role.dataScope})
+    </insert>
+
+    <select id="getRoleListByUserId" resultMap="BaseResultMap">
+        select r.role_id, r.role_name, r.role_name_zh, r.status, r.remark
+        from sys_user_role ur left join sys_role r on ur.role_id = r.role_id
+        <where>
+            <if test="userId != null">
+                ur.user_id = #{userId}
+            </if>
+        </where>
+    </select>
+</mapper>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>友链管理</title>
+    <header th:replace="header::html"></header>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action=""  lay-filter="search-filter">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">友链名</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="nickName" placeholder="输入友链名进行搜索" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">审核状态</label>
+                    <div class="layui-input-inline">
+                        <select name="status">
+                            <option value="" selected>所有</option>
+                            <option value="0">审核未过</option>
+                            <option value="1">等待审核</option>
+                            <option value="2">审核通过</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="link-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="link-table" lay-filter="link-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="link-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="link-bar">
+    <button class="pear-btn pear-btn-warming pear-btn-sm" lay-event="audit"><i class="layui-icon layui-icon-vercode"></i></button>
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i></button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i></button>
+</script>
+
+<!-- <script th:src="@{/component/layui/layui.js}"></script>
+<script th:src="@{/component/pear/pear.js}"></script> -->
+<script type="text/javascript">
+    layui.use(['table', 'form', 'jquery', 'laydate'],function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+
+        let MODULE_PATH = "/api/page/link";
+        form.render('select', 'search-filter');
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        let cols = [
+            [
+                {type:'checkbox', fixed: 'left', width: 50},
+                {title: '昵称', field: 'nickName', align: 'center', width: 120},
+                {title: '简介', field: 'introduction', align:'center', width: 250},
+                {
+                    title: '网址', field: 'link', align:'center', minWidth: 200, templet: function(data) {
+                        let link = data.link;
+                        return '<a href = '+ link + ' style="color: #63bbd0" target = "_blank">' + link + '</a>';
+                    }
+                },
+                {
+                    title: '状态', field:'status', width: 100, align: 'center', sort: true, templet: function(data) {
+                        let color, text, status = data.status;
+                        switch(status) {
+                            case 0: {
+                                color = 'red';
+                                text = '审核未过';
+                                break;
+                            }
+                            case 1: {
+                                color = 'blue';
+                                text = '等待审核';
+                                break;
+                            }
+                            case 2: {
+                                color = 'green';
+                                text = '审核通过';
+                                break;
+                            }
+                            default: break;
+                        }
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge ' + bgColor + '">' + text + '</span>'
+                    }
+                },
+                {
+                    field: 'sort', width: 80, align: 'center', title: '排序', sort: true, templet: function (data) {
+                        let sort = data.sort;
+                        return '<span class="layui-badge layui-bg-green">' + sort + '</span>'
+                    }
+                },
+                {title: '创建时间', field: 'createTime', width:200, sort:true, align:'center'},
+                {title: '更新时间', field: 'updateTime', width:200, sort:true, align:'center'},
+                {title: '操作', toolbar: '#link-bar', align:'center', width:195}
+            ]
+        ]
+
+        table.render({
+            elem: '#link-table',
+            url: MODULE_PATH,
+            page: true ,
+            cols: cols ,
+            skin: 'line',
+            toolbar: '#link-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(link-table)', function(obj){
+            if(obj.event === 'remove'){
+                window.remove(obj);
+            } else if(obj.event === 'edit'){
+                window.edit(obj);
+            } else if(obj.event === 'audit'){
+                window.audit(obj);
+            }
+        });
+        // obj传进来的数据是我们从数据库查出来的那些，不仅仅是cols里展示出来的那些
+        table.on('toolbar(link-table)', function(obj){
+            if(obj.event === 'add'){
+                window.add();
+            } else if(obj.event === 'refresh'){
+                window.refresh();
+            } else if(obj.event === 'batchRemove'){
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(link-query)', function(data){
+            let formData = data.field;
+            let name = formData.nickName;
+            let dateRange = formData.dateRange;
+            let dates = dateRange.split(' ~ ')
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('link-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    nickName: name,
+                    status: formData.status,
+                    startTime: startDate,
+                    endTime: endDate
+                },
+                url: MODULE_PATH,
+                method: 'get'
+            })
+            return false;
+        });
+
+        window.add = function(){
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/add'
+            });
+        }
+
+
+        window.edit = function(obj){
+            let data = obj.data;
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/edit?linkId='+data.linkId
+            });
+        }
+
+        window.audit = function(obj) {
+            let data = obj.data;
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/audit?linkId='+data.linkId
+            });
+        }
+
+        window.remove = function(obj){
+            layer.confirm('确定要删除该友链吗？', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+'/'+obj.data['linkId'],
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                obj.del();
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.batchRemove = function(obj){
+            let data = table.checkStatus(obj.config.id).data;
+            if(data.length === 0){
+                layer.msg("未选中数据",{icon:3,time:1000});
+                return false;
+            }
+            let linkIds = '';
+            data.forEach(v=> {
+                linkIds += ',' + v.linkId;
+            });
+            linkIds = linkIds.substring(1,linkIds.length);
+            layer.confirm('确定要删除这些友链吗？', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+"/batchRemove/"+linkIds,
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                table.reload('link-table');
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(){
+            table.reload('link-table');
+        }
+    })
+</script>
+</body>
+</html>

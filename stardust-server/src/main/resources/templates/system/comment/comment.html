@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>分类管理</title>
+    <header th:replace="header::html"></header>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="" lay-filter="search-filter">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">评论昵称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="name" placeholder="不输入则忽略名称筛选" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="comment-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="comment-table" lay-filter="comment-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="comment-bar">
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i></button>
+</script>
+
+<script type="text/javascript">
+    layui.use(['table','form','jquery', 'laydate'],function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+
+        let MODULE_PATH = "/api/page/comment";
+
+        form.render();
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        let cols = [
+            [
+                {title: '序号', field: 'commentId', align: 'center', width: 100},
+                {title: '游客昵称', field: 'nickname', align:'center', width: 100},
+                {title: '评论内容', field: 'content', align:'center', width: 300},
+                {title: '浏览器', field: 'browser', align:'center', width: 200},
+                {title: '操作系统', field: 'os', align:'center', width: 150},
+                {title: '请求ip', field: 'requestIp', align:'center', width: 200},
+                // {
+                //     field: 'display',
+                //     width: 150,
+                //     title: '是否前台显示',
+                //     sort: true,
+                //     align: 'center',
+                //     templet: function (data) {
+                //         let text = data.display ? '是' : '否';
+                //         let color = data.display ? 'green' : 'orange';
+                //         let bgColor = 'layui-bg-' + color;
+                //         return '<span class="layui-badge ' + bgColor + '">' + text + '</span>';
+                //     }
+                // },
+                {title: 'ip来源', field: 'address', align:'center', width: 200},
+                {title: '创建时间', field: 'createTime', align:'center', width: 250},
+                {title: '操作', toolbar: '#comment-bar', align:'center', width:95}
+            ]
+        ]
+
+        table.render({
+            elem: '#comment-table',
+            url: MODULE_PATH,
+            page: true ,
+            cols: cols ,
+            skin: 'line',
+            toolbar: '#comment-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(comment-table)', function(obj){
+            window.remove(obj);
+        });
+        // obj传进来的数据是我们从数据库查出来的那些，不仅仅是cols里展示出来的那些
+        table.on('toolbar(comment-table)', function(obj){
+            if(obj.event === 'refresh'){
+                window.refresh();
+            }
+        });
+
+        form.on('submit(comment-query)', function(data){
+            let formData = data.field;
+            let nickName = formData.name;
+            let dateRange = formData.dateRange;
+            let dates = dateRange.split(' ~ ')
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('comment-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    nickname: nickName,
+                    startTime: startDate,
+                    endTime: endDate
+                },
+                url: MODULE_PATH,
+                method: 'get'
+            })
+            return false;
+        });
+
+        form.on('switch(comment-enable)', function(obj){
+            layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+        });
+
+        window.remove = function(obj){
+            layer.confirm('确定要删除该评论吗', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+'/'+obj.data['commentId'],
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                obj.del();
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(){
+            table.reload('comment-table');
+        }
+    })
+</script>
+</body>
+</html>

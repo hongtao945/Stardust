@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>添加七牛云配置</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">
+                        accessKey
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="accessKey" name="accessKey" lay-verify="required" lay-reqtext="Access Key不能为空" autocomplete="off" placeholder="请输入accessKey" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">secretKey</label>
+                    <div class="layui-input-block">
+                        <input type="password" id="secretKey"  name="secretKey" lay-verify="required" lay-reqtext="Secret Key不能为空" autocomplete="off" placeholder="请输入secretKey" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">空间名称</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="bucket"  name="bucket" lay-verify="required" lay-reqtext="空间名称不能为空" autocomplete="off" placeholder="请输入空间名称" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">外链域名</label>
+                    <div class="layui-input-block">
+                        <input type="url" id="domain"  name="domain" lay-verify="required|url" lay-reqtext="外链域名不能为空" autocomplete="off" placeholder="请输入域名" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">空间类型</label>
+                    <div class="layui-input-block">
+                        <input type="radio" name="type" value="公开" title="公开" checked>
+                        <input type="radio" name="type" value="私有" title="私有">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label required">存储区域</label>
+                    <div class="layui-input-block">
+                        <select name="zone">
+                            <option value="华南">华南</option>
+                            <option value="华东">华东</option>
+                            <option value="华北">华北</option>
+                            <option value="北美">北美</option>
+                            <option value="东南亚">东南亚</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="pear-btn pear-btn-primary pear-btn-sm" lay-submit="" lay-filter="qiniu-save">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="pear-btn pear-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script>
+layui.use(['form','jquery', 'dtree'],function(){
+    let form = layui.form;
+    let $ = layui.jquery;
+
+    $.ajax({
+        url: '/api/qiniu/getCurrentConfig',
+        type: 'get',
+        success: function(result) {
+            const data = result.data;
+            $('.layui-form input[name="accessKey"]').val(data.accessKey);
+            $('.layui-form input[name="secretKey"]').val(data.secretKey);
+            $('.layui-form input[name="bucket"]').val(data.bucket);
+            $('.layui-form input[name="domain"]').val(data.domain);
+            $('.layui-form input[name="type"]').val(data.type);
+            $('.layui-form select[name="zone"]').val(data.zone);
+            form.render();
+        }
+    })
+
+
+    form.on('submit(qiniu-save)', function(data){
+        $.ajax({
+            url:'/api/qiniu/config',
+            data:JSON.stringify(data.field),
+            dataType:'json',
+            contentType:'application/json',
+            type:'put',
+            success:function(result){
+                if(result.code == 200){
+                    layer.msg(result.message,{icon:1,time:1000},function(){
+                        parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                        parent.layui.table.reload("qiniu-table");
+                    });
+                }else{
+                    layer.msg(result.message,{icon:2,time:1000});
+                }
+            }
+        })
+        return false;
+    });
+})
+</script>
+
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('错误日志')"/>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="" lay-filter="search-filter">
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">操作人名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="Operator" placeholder="输入操作人名称进行搜索" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日志描述</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="title" placeholder="输入日志描述进行搜索" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="log-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="log-table" lay-filter="log-table"></table>
+    </div>
+</div>
+<script type="text/html" id="log-toolbar">
+    <button class="pear-btn pear-btn-warming pear-btn-md" lay-event="removeAll">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除所有
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除所选
+    </button>
+</script>
+<script type="text/html" id="log-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="detail">详细信息</button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+</script>
+
+<script type="text/html" id="log-createTime">
+    {{layui.util.toDateString(d.createTime,  "yyyy-MM-dd HH:mm:ss")}}
+</script>
+
+<th:block th:include="include :: footer"/>
+<script>
+    layui.use(['table', 'form', 'jquery', 'element', 'laydate'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let laydate = layui.laydate;
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        let MODULE_PATH = "/api/log";
+
+        let cols = [
+            [
+                {type: 'checkbox', fixed: 'left', width: 50},
+                {title: '日志描述', field: 'title', align: 'center'},
+                {title: '请求方式', field: 'requestMethod', align: 'center'},
+                {title: '浏览器', field: 'browser', align: 'center'},
+                {title: '操作地址', field: 'location', align: 'center'},
+                {title: '访问耗时(ms)', field: 'operTime', align: 'center'},
+                {title: '创建时间', field: 'createTime', templet: '#log-createTime', align: 'center'},
+                {title: '操作人', field: 'operName', align: 'center'},
+                {title: '接口', field: 'method', align: 'center', hide: true},
+                {title: '请求参数', field: 'params', align: 'center', hide: true},
+                {title: '详细信息', field: 'exceptionDetail', align: 'center', hide: true},
+                {title: '操作', toolbar: '#log-bar', align: 'center', width: 250}
+            ]
+        ]
+
+        table.render({
+            elem: '#log-table',
+            url: MODULE_PATH + '/error',
+            page: true,
+            cols: cols,
+            skin: 'line',
+            toolbar: '#log-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(log-table)', function (obj) {
+            if (obj.event === 'remove') {
+                window.remove(obj);
+            } else if (obj.event === 'detail') {
+                var data = obj.data;
+                var errorDetail = JSON.stringify(data.exceptionDetail)
+                errorDetail = errorDetail.replace(/\\r\\n/g, '<br>')
+                errorDetail = errorDetail.replace(/\\tat/g, '&nbsp;&nbsp;&nbsp;&nbsp;');
+                var index = layer.alert('请求参数：<br>' + JSON.stringify(data.params) +
+                    '<br>方法名: <br>' + JSON.stringify(data.method) +
+                    '<br>详细信息: <br>' + errorDetail,
+                    {
+                        area: ['320px', '195px'],
+                        maxmin: true
+                    })
+                layer.full(index);
+            }
+        });
+
+        table.on('toolbar(log-table)', function (obj) {
+            if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            } else if (obj.event === 'removeAll') {
+                window.removeAll();
+            }
+        });
+
+        form.on('submit(log-query)', function (data) {
+            let formData = data.field;
+            let name = formData.Operator;
+            let dateRange = formData.dateRange;
+            let dates = dateRange.split(' ~ ')
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('log-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    Operator: name,
+                    title: formData.title,
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                url: MODULE_PATH + '/error',
+                method: 'get'
+            })
+            return false;
+        });
+
+        window.remove = function (obj) {
+            layer.confirm('确定要删除该日志吗？', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + '/' + obj.data['operId'],
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                                obj.del();
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.batchRemove = function (obj) {
+            let data = table.checkStatus(obj.config.id).data;
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+            let ids = '';
+            data.forEach(v => {
+                ids += ',' + v.operId;
+            });
+            ids = ids.substring(1, ids.length);
+            layer.confirm('确定要删除这些日志吗？', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + "/batchRemove/" + ids,
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                                table.reload('log-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.removeAll = function () {
+            layer.confirm('确定要删除所有日志吗？', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + '/allErrorLog',
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                                table.reload('log-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function () {
+            table.reload('log-table');
+        }
+
+
+    })
+</script>
+</body>
+</html>

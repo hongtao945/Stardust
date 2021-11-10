@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.MessageMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Message">
+        <id column="message_id" property="messageId" />
+        <result column="content" property="content" />
+        <result column="fid" property="fid" />
+        <result column="fcomment_nickname" property="fcommentNickname" />
+        <result column="nickname" property="nickname" />
+        <result column="email" property="email" />
+        <result column="site_url" property="siteUrl" />
+        <result column="browser" property="browser" />
+        <result column="os" property="os" />
+        <result column="request_ip" property="requestIp" />
+        <result column="address" property="address" />
+        <result column="is_delete" property="isDelete"/>
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        message_id, content, fid, fcomment_nickname, nickname, email, site_url, browser, os, request_ip, address, is_delete, create_time
+    </sql>
+
+    <select id="getParentMessages" resultType="com.lht.admin.pojo.Message">
+        select message_id, content, fid, fcomment_nickname, nickname, browser, os, address, create_time, is_delete
+        from t_message where fid = 0 order by message_id desc
+    </select>
+
+    <select id="getAllMessages" resultType="com.lht.admin.pojo.Message">
+        select message_id, content, fid, fcomment_nickname, nickname, browser, os, address, create_time, is_delete
+        from t_message where fid != 0
+    </select>
+
+    <select id="fuzzyGetMessageList" resultType="com.lht.admin.pojo.Message">
+        select message_id, content, nickname, email, site_url, browser, os, request_ip, address, create_time from t_message
+        <if test="ew != null and ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+        order by message_id desc
+    </select>
+
+    <select id="getNewestMessages" resultType="com.lht.admin.pojo.Message">
+        SELECT
+            nickname,
+            content,
+            email,
+            site_url,
+            address,
+            create_time
+        FROM
+            t_message
+        ORDER BY
+            message_id DESC
+            LIMIT 10
+    </select>
+
+</mapper>

@@ -1,0 +1,30 @@
+kibana中建立索引的语句，需要先安装ik分词器
+
+PUT article_document
+{
+  "mappings": {
+    "properties": {
+      "articleId": {
+        "type": "long"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      },
+      "summary": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      },
+      "htmlContent": {
+        "type": "text",
+        "analyzer": "ik_max_word"
+      },
+      "published": {
+        "type": "boolean"
+      },
+      "status": {
+        "type": "integer"
+      }
+    }
+  }
+}

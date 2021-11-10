@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.QiniuConfigMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.QiniuConfig">
+        <id column="id" property="id" />
+        <result column="access_key" property="accessKey" />
+        <result column="secret_key" property="secretKey" />
+        <result column="bucket" property="bucket" />
+        <result column="domain" property="domain" />
+        <result column="type" property="type" />
+        <result column="zone" property="zone" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, access_key, secret_key, bucket, domain, type, zone
+    </sql>
+
+</mapper>

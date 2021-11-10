@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>公告管理</title>
+    <header th:replace="header::html"></header>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">公告内容</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="content" placeholder="" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="notice-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="notice-table" lay-filter="notice-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="notice-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="notice-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i>
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i>
+    </button>
+</script>
+
+<!--		<script type="text/html" id="role-enable">-->
+<!--			<input type="checkbox" name="enable" value="{{d.id}}" lay-skin="switch" lay-text="启用|禁用" lay-filter="user-enable" checked = "{{ d.id == 10003 ? 'true' : 'false' }}">-->
+<!--		</script>-->
+
+<script>
+    layui.use(['table', 'form', 'jquery', 'laydate'], function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+
+        let MODULE_PATH = "/api/notice";
+
+        form.render();
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        let cols = [
+            [
+                {type: 'checkbox'},
+                {title: 'ID', field: 'noticeId', align: 'center'},
+                {title: '公告内容', field: 'noticeContent', align: 'center', width: 500},
+                {
+                    title: '公告状态', field: 'status', width: 120, align: 'center', templet: function (data) {
+                        let str = data.status ? '显示' : '不显示';
+                        let color = data.status ? 'green' : 'orange';
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge ' + bgColor + '">' + str + '</span>';
+                    }
+                },
+                {title: '创建者', field: 'createBy', align: 'center', },
+                {title: '创建时间', field: 'createTime', align: 'center',},
+                {title: '操作', toolbar: '#notice-bar', align: 'center', width: 195}
+            ]
+        ]
+
+        table.render({
+            elem: '#notice-table',
+            url: MODULE_PATH,
+            page: true,
+            cols: cols,
+            skin: 'line',
+            toolbar: '#notice-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(notice-table)', function(obj){
+            if(obj.event === 'remove'){
+                window.remove(obj);
+            } else if(obj.event === 'edit'){
+                window.edit(obj);
+            }
+        });
+
+        // obj传进来的数据是我们从数据库查出来的那些，不仅仅是cols里展示出来的那些
+        table.on('toolbar(notice-table)', function (obj) {
+            if (obj.event === 'add') {
+                window.add();
+            } else if (obj.event === 'refresh') {
+                window.refresh();
+            } else if (obj.event === 'batchRemove') {
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(notice-query)', function (data) {
+            let formData = data.field;
+            let content = formData.content;
+            let dateRange = formData.dateRange;
+            let dates = dateRange.split(' ~ ')
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('notice-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    content: content,
+                    startTime: startDate,
+                    endTime: endDate
+                },
+                url: MODULE_PATH,
+                method: 'get'
+            })
+            return false;
+        });
+
+        // form.on('switch(role-enable)', function(obj){
+        //     layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+        // });
+
+        window.add = function () {
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/add'
+            });
+        }
+
+
+        window.edit = function (obj) {
+            let data = obj.data;
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/edit?noticeId=' + data.noticeId
+            });
+        }
+
+        window.remove = function (obj) {
+            layer.confirm('确定要删除该公告吗?', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + '/' + obj.data['noticeId'],
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                                obj.del();
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.batchRemove = function (obj) {
+            let data = table.checkStatus(obj.config.id).data;
+            if (data.length === 0) {
+                layer.msg("未选中数据", {icon: 3, time: 1000});
+                return false;
+            }
+            let noticeIds = '';
+            data.forEach(v => {
+                noticeIds += ',' + v.noticeId;
+            });
+            noticeIds = noticeIds.substring(1, noticeIds.length);
+            layer.confirm('确定要删除这些公告吗', {icon: 3, title: '提示'}, function (index) {
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH + "/batchRemove/" + noticeIds,
+                    dataType: 'json',
+                    type: 'delete',
+                    success: function (result) {
+                        layer.close(loading);
+                        if (result.code == 200) {
+                            layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                                table.reload('notice-table');
+                            });
+                        } else {
+                            layer.msg(result.message, {icon: 2, time: 1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function () {
+            table.reload('notice-table');
+        }
+    })
+</script>
+</body>
+</html>

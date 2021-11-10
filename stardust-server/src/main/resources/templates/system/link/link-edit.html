@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑友链</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <input type="hidden" th:value="${link.linkId}" name="linkId"/>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">
+                    昵称
+                </label>
+                <div class="layui-input-block">
+                    <input type="text" id="nickName" th:value="${link.nickName}" name="nickName" lay-verify="required|nickName" lay-reqtext="昵称不能为空" autocomplete="off" placeholder="请输入昵称" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">头像</label>
+                <div class="layui-input-block">
+                    <input type="url" id="avatar" th:value="${link.avatar}" name="avatar" lay-verify="required|url" lay-reqtext="头像不能为空" autocomplete="off" placeholder="请输入头像url" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">简介</label>
+                <div class="layui-input-block">
+                    <textarea id="introduction" th:text="${link.introduction}" name="introduction" lay-verify="required|introduction" lay-reqtext="简介不能为空" autocomplete="off" placeholder="请输入简介" class="layui-textarea"></textarea>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">网址</label>
+                <div class="layui-input-block">
+                    <input type="url" id="link" th:value="${link.link}" name="link" lay-verify="required|url" lay-reqtext="友链网址不能为空" autocomplete="off" placeholder="请输入友链网址" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label required">排序</label>
+                <div class="layui-input-block">
+                    <input type="number" th:value="${link.sort}" name="sort" placeholder="请输入排序值" value="" class="layui-input" lay-verify="number|sort"
+                            required="">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="pear-btn pear-btn-primary pear-btn-sm" lay-submit="" lay-filter="link-update">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="pear-btn pear-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script  type="text/javascript">
+layui.use(['form','jquery'],function(){
+    let form = layui.form;
+    let $ = layui.jquery;
+
+    form.verify({
+        //验证昵称
+        nickName: function (value) { //value：表单的值、item：表单的DOM对象
+            if (value.length < 1 || value.length > 10) {
+                return '昵称长度为1-10个字符'
+            }
+        },
+        introduction: function (value) {
+            if (value.length > 30) {
+                return '简介长度在30个字符以内';
+            }
+        },
+        sort: function (value) {
+            if (value < 1 || value > 1024) {
+                return '排序值在1-1024之间'
+            }
+        }
+    });
+
+    form.on('submit(link-update)', function(data){
+        $.ajax({
+            url:'/api/page/link',
+            data:JSON.stringify(data.field),
+            dataType:'json',
+            contentType:'application/json',
+            type:'put',
+            success:function(result){
+                if(result.code == 200){
+                    layer.msg(result.message,{icon:1,time:1000},function(){
+                        parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                        parent.layui.table.reload("link-table");
+                    });
+                }else{
+                    layer.msg(result.message,{icon:2,time:1000});
+                }
+            }
+        })
+        return false;
+    });
+})
+</script>
+
+</body>
+</html>

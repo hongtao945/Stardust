@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.NoticeMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Notice">
+        <id column="notice_id" property="noticeId" />
+        <result column="notice_content" property="noticeContent" />
+        <result column="status" property="status" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        notice_id, notice_content, status, create_by, create_time
+    </sql>
+    <select id="fuzzyGetNoticeList" resultType="com.lht.admin.pojo.Notice">
+        select <include refid="Base_Column_List"></include> from sys_notice
+        <if test="ew != null and ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+        order by notice_id desc
+    </select>
+
+    <select id="recentNotice" resultType="com.lht.admin.pojo.Notice">
+        select notice_content, create_time from sys_notice order by notice_id desc limit 8
+    </select>
+
+</mapper>

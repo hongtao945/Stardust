@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>分类管理</title>
+    <header th:replace="header::html"></header>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">图片描述</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="description" placeholder="不输入则忽略名称筛选" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">前台显示</label>
+                    <div class="layui-input-inline">
+                        <select name="display">
+                            <option value="" selected>所有</option>
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="photo-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="photo-table" lay-filter="photo-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="photo-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="photo-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i></button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i></button>
+</script>
+
+<!--		<script type="text/html" id="photo-enable">-->
+<!--			<input type="checkbox" name="enable" value="{{d.id}}" lay-skin="switch" lay-text="启用|禁用" lay-filter="user-enable" checked = "{{ d.id == 10003 ? 'true' : 'false' }}">-->
+<!--		</script>-->
+<script th:src="@{/admin/js/jquery.min.js}"></script>
+<script>
+    layui.use(['table','form','jquery', 'laydate'],function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+
+        let MODULE_PATH = "/api/page/photo";
+
+        form.render();
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        let cols = [
+            [
+                {type:'checkbox'},
+                {title: '图片描述', field: 'description', align:'center'},
+                {
+                    title: '预览图', width: 150, align:'center', templet: function(data) {
+                        const url = data.url;
+                        return `<a onclick = "show_img(this)">
+                                    <img class="layui-nav-img" src="`+url+`"></img>
+                                </a>`;
+                    }
+                },
+                {
+                    field: 'display',
+                    width: 150,
+                    title: '是否前台显示',
+                    sort: true,
+                    align: 'center',
+                    templet: function (data) {
+                        let text = data.display ? '是' : '否';
+                        let color = data.display ? 'green' : 'orange';
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class="layui-badge ' + bgColor + '">' + text + '</span>';
+                    }
+                },
+                {
+                    field: 'sort', width: 100, title: '排序', align: 'center', sort: true, templet: function (data) {
+                        let sort = data.sort;
+                        return '<span class="layui-badge layui-bg-green">' + sort + '</span>';
+                    }
+                },
+                {title: '创建时间', field: 'createTime', align:'center'},
+                {title: '更新时间', field: 'updateTime', align:'center'},
+                // {title: '是否可用', field: 'status', align:'center', templet:'#photo-enable'},
+                {title: '操作', toolbar: '#photo-bar', align:'center', width:195}
+            ]
+        ]
+
+        table.render({
+            elem: '#photo-table',
+            url: '/api/page/photo',
+            page: false ,
+            cols: cols ,
+            skin: 'line',
+            toolbar: '#photo-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(photo-table)', function(obj){
+            if(obj.event === 'remove'){
+                window.remove(obj);
+            } else if(obj.event === 'edit'){
+                window.edit(obj);
+            } else if(obj.event === 'power'){
+                window.power(obj);
+            }
+        });
+        // obj传进来的数据是我们从数据库查出来的那些，不仅仅是cols里展示出来的那些
+        table.on('toolbar(photo-table)', function(obj){
+            if(obj.event === 'add'){
+                window.add();
+            } else if(obj.event === 'refresh'){
+                window.refresh();
+            } else if(obj.event === 'batchRemove'){
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(photo-query)', function(data){
+            let formData = data.field;
+            let dateRange = data.field.dateRange;
+            let dates = dateRange.split('~');
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('photo-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    description: formData.description,
+                    display: formData.display,
+                    startDate: startDate,
+                    endDate: endDate
+                },
+                url: '/api/page/photo',
+                method: 'get'
+            })
+            return false;
+        });
+
+        window.add = function(){
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/add'
+            });
+        }
+
+        window.edit = function(obj){
+            let data = obj.data;
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/edit?photoId='+data.photoId
+            });
+        }
+
+        window.remove = function(obj){
+            layer.confirm('确定要删除该图片吗？', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+'/'+obj.data['photoId'],
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                obj.del();
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.batchRemove = function(obj){
+            let data = table.checkStatus(obj.config.id).data;
+            if(data.length === 0){
+                layer.msg("未选中数据",{icon:3,time:1000});
+                return false;
+            }
+            let photoIds = "";
+            data.forEach(v=> {
+                photoIds += ',' + v.photoId;
+            });
+            photoIds = photoIds.substr(1,photoIds.length);
+            layer.confirm('确定要删除这些图片吗？', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+"/batchRemove/"+photoIds,
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                table.reload('photo-table');
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(){
+            table.reload('photo-table');
+        }
+    });
+    //显示大图片
+    function show_img(t) {
+        var t = $(t).find("img");
+        //页面层
+        layer.open({
+            title: '图片',
+            type: 1,
+            shade: 0.2,
+            maxmin: true,
+            shadeClose: true,
+            area: ['80%', '80%'],
+            content: '<div style="text-align:center"><img src="' + $(t).attr('src') + '" /></div>'
+        });
+        $(window).on("resize", function () {
+            layer.full(index);
+        });
+    };
+</script>
+</body>
+</html>

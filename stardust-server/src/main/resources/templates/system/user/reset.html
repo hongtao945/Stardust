@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>修改密码</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="layui-form-item">
+                <label class="layui-form-label">
+                    原密码
+                </label>
+                <div class="layui-input-block">
+                    <input type="password" name="old_password" lay-verify="password"
+                           autocomplete="off" placeholder="请输入旧密码" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">
+                    新密码
+                </label>
+                <div class="layui-input-block">
+                    <input type="password" name="new_password" lay-verify="password"
+                           autocomplete="off" placeholder="输入新密码" class="layui-input">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label">
+                    再次输入
+                </label>
+                <div class="layui-input-block">
+                    <input type="password" name="ensure" lay-verify="password|equals"
+                           autocomplete="off" placeholder="再次输入密码" class="layui-input">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="pear-btn pear-btn-primary pear-btn-sm" lay-submit=""
+                    lay-filter="password-edit">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="pear-btn pear-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script th:inline="javascript">
+    layui.use(['form', 'jquery'], function () {
+
+        let form = layui.form;
+        let $ = layui.jquery;
+
+
+        const URL = '/api/user';
+
+        form.verify({
+            password: function (value) {
+                if (value.length <= 0) {
+                    return '密码不能为空';
+                }
+            },
+            equals: function (value) {
+                const newPassword = $("input[name='new_password']").val();
+                console.log(newPassword, value);
+                if (value !== newPassword) {
+                    return "两次输入密码不一致";
+                }
+            }
+        });
+
+        form.on('submit(password-edit)', function (data) {
+            const d = {
+                oldPassword: data.field.old_password,
+                newPassword: data.field.new_password
+            };
+            $.ajax({
+                url: URL + '/reset',
+                data: JSON.stringify(d),
+                dataType: 'json',
+                contentType: 'application/json',
+                type: 'put',
+                success: function (result) {
+                    if (result.code == 200) {
+                        layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                            parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                            $.ajax({
+                                url: '/logout',
+                                dataType: 'json',
+                                type: 'get',
+                                success: function(result) {
+                                    if (result.code === 200) {
+                                        location.href = "/login.html";
+                                        return true;
+                                    }
+                                }
+                            });
+                        });
+                    } else {
+                        layer.msg(result.message, {icon: 2, time: 1000});
+                    }
+                }
+            })
+            return false;
+        });
+    })
+</script>
+</body>
+</html>

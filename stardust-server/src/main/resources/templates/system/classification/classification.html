@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <title>分类管理</title>
+    <header th:replace="header::html"></header>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action="">
+            <div class="layui-form-item">
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">分类名称</label>
+                    <div class="layui-input-inline">
+                        <input type="text" name="name" placeholder="不输入则忽略名称筛选" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">前台显示</label>
+                    <div class="layui-input-inline">
+                        <select name="display">
+                            <option value="" selected>所有</option>
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="classification-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="classification-table" lay-filter="classification-table"></table>
+    </div>
+</div>
+
+<script type="text/html" id="classification-toolbar">
+    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">
+        <i class="layui-icon layui-icon-add-1"></i>
+        新增
+    </button>
+    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">
+        <i class="layui-icon layui-icon-delete"></i>
+        删除
+    </button>
+</script>
+
+<script type="text/html" id="classification-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i></button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i></button>
+</script>
+
+<!--		<script type="text/html" id="classification-enable">-->
+<!--			<input type="checkbox" name="enable" value="{{d.id}}" lay-skin="switch" lay-text="启用|禁用" lay-filter="user-enable" checked = "{{ d.id == 10003 ? 'true' : 'false' }}">-->
+<!--		</script>-->
+
+<script>
+    layui.use(['table','form','jquery', 'laydate'],function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+
+        let MODULE_PATH = "/api/page/classification";
+
+        form.render();
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        let cols = [
+            [
+                {type:'checkbox'},
+                {title: '分类名称', field: 'name', align: 'center', width: 100},
+                {title: '简介', field: 'introduction', align:'center'},
+                {title: '颜色', field: 'color', align:'center', templet: (data)=> {
+                        return '<span class="layui-badge" style="background-color: '+data.color+'; color: #cccccc">'
+                            + data.color + '</span>'
+                    }
+                },
+                {
+                    field: 'display',
+                    width: 150,
+                    title: '是否前台显示',
+                    sort: true,
+                    align: 'center',
+                    templet: function (data) {
+                        let text = data.display ? '是' : '否';
+                        let color = data.display ? 'green' : 'orange';
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class="layui-badge ' + bgColor + '">' + text + '</span>';
+                    }
+                },
+                {title: '关联文章数量', field: 'articleCount', align:'center'},
+                {title: '创建时间', field: 'createTime', align:'center'},
+                {title: '更新时间', field: 'updateTime', align:'center'},
+                {title: '操作', toolbar: '#classification-bar', align:'center', width:195}
+            ]
+        ]
+
+        table.render({
+            elem: '#classification-table',
+            url: '/api/page/classification',
+            page: true ,
+            cols: cols ,
+            skin: 'line',
+            toolbar: '#classification-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(classification-table)', function(obj){
+            if(obj.event === 'remove'){
+                window.remove(obj);
+            } else if(obj.event === 'edit'){
+                window.edit(obj);
+            } else if(obj.event === 'power'){
+                window.power(obj);
+            }
+        });
+        // obj传进来的数据是我们从数据库查出来的那些，不仅仅是cols里展示出来的那些
+        table.on('toolbar(classification-table)', function(obj){
+            if(obj.event === 'add'){
+                window.add();
+            } else if(obj.event === 'refresh'){
+                window.refresh();
+            } else if(obj.event === 'batchRemove'){
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(classification-query)', function(data){
+            const formData = data.field;
+            let name = formData.name;
+            let dateRange = formData.dateRange;
+            let display = formData.display;
+            let dates = dateRange.split(' ~ ')
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('classification-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    name: name,
+                    display: display,
+                    startTime: startDate,
+                    endTime: endDate
+                },
+                url: '/api/page/classification',
+                method: 'get'
+            })
+            return false;
+        });
+
+        form.on('switch(classification-enable)', function(obj){
+            layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+        });
+
+        window.add = function(){
+            layer.open({
+                type: 2,
+                title: '新增',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/add'
+            });
+        }
+
+        window.edit = function(obj){
+            let data = obj.data;
+            layer.open({
+                type: 2,
+                title: '修改',
+                shade: 0.1,
+                area: ['500px', '400px'],
+                content: MODULE_PATH + '/edit/?classId='+data.classId
+            });
+        }
+
+        window.remove = function(obj){
+            layer.confirm('确定要删除该分类吗', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+'/'+obj.data['classId'],
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                obj.del();
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.batchRemove = function(obj){
+            let data = table.checkStatus(obj.config.id).data;
+            if(data.length === 0){
+                layer.msg("未选中数据",{icon:3,time:1000});
+                return false;
+            }
+            let ids = "";
+            data.forEach(v=> {
+                ids += ',' + v.classId;
+            });
+            ids = ids.substr(1,ids.length);
+            layer.confirm('确定要删除这些分类吗', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+"/batchRemove/"+ids,
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                table.reload('classification-table');
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(){
+            table.reload('classification-table');
+        }
+    })
+</script>
+</body>
+</html>

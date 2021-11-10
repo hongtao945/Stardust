@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "server.tomcat.remote.port-header",
+      "type": "java.lang.String",
+      "description": "Description for server.tomcat.remote.port-header."
+  }
+] }

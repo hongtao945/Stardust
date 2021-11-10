@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.ArticleMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Article">
+        <id column="article_id" property="articleId" />
+        <result column="title" property="title" />
+        <result column="summary" property="summary" />
+        <result column="html_content" property="htmlContent" />
+        <result column="text_content" property="textContent" />
+        <result column="article_face" property="articleFace" />
+        <result column="type" property="type" />
+        <result column="words" property="words" />
+        <result column="comments" property="comments" />
+        <result column="views" property="views" />
+        <result column="recommend" property="recommend" />
+        <result column="published" property="published" />
+        <result column="sort" property="sort" />
+        <result column="author_id" property="authorId" />
+        <result column="class_id" property="classId" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        article_id, title, summary, html_content, text_content, article_face, type, words, views,
+        recommend, published, sort, author_id, class_id, status, create_time, update_time
+    </sql>
+
+    <!-- 多表查询语句抽取  a.text_content, a.status, a.published, a.html_content,-->
+    <sql id="SELECT_ACT">
+        select a.article_id, a.title,  a.type, a.article_face, a.words, a.views,
+        a.recommend,  a.sort, a.create_time, a.summary, a.update_time, c.class_id, c.name, c.color
+    </sql>
+
+    <update id="viewsIncrement">
+        update t_article set views = views + 1 where article_id = #{id}
+    </update>
+
+    <resultMap id="articleInfoMap" type="com.lht.admin.pojo.Article" extends="BaseResultMap">
+        <association property="classification" javaType="com.lht.admin.pojo.Classification">
+            <id column="class_id" property="classId"/>
+            <id column="name" property="name"/>
+            <id column="color" property="color"/>
+        </association>
+        <association property="author" javaType="com.lht.admin.pojo.User">
+            <id column="user_id" property="userId"/>
+            <id column="nickname" property="nickname"/>
+        </association>
+        <collection property="tagList" column="article_id" select="com.lht.admin.mapper.TagMapper.selectByArticleId"/>
+    </resultMap>
+
+    <select id="fuzzyGetArticles" resultMap="articleInfoMap">
+        SELECT
+            a.article_id,
+            a.title,
+            a.type,
+            a.article_face,
+            a.recommend,
+            a.STATUS,
+            a.published,
+            a.sort,
+            a.views,
+            a.create_time,
+            a.update_time,
+            c.class_id,
+            c.NAME,
+            c.color,
+            COUNT( cm.article_id ) AS comments,
+            u.nickname
+        FROM
+            t_article a
+            LEFT JOIN t_classfication c ON a.class_id = c.class_id
+            LEFT JOIN t_comment cm ON a.article_id = cm.article_id
+            INNER JOIN sys_user u on a.author_id = u.user_id
+        <if test="ew != null and ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+        GROUP BY (a.article_id)
+    </select>
+
+    <select id="getArticleInfoById" resultMap="articleInfoMap">
+        <include refid="SELECT_ACT"></include> , a.html_content, u.nickname
+        FROM t_article a
+        INNER JOIN t_classfication c ON a.class_id = c.class_id
+        INNER JOIN sys_user u on a.author_id = u.user_id
+        <if test="articleId != null">
+            where a.article_id = #{articleId}
+        </if>
+    </select>
+
+    <select id="getArticlesSortedByDate" resultMap="articleInfoMap">
+        <include refid="SELECT_ACT"></include>
+        FROM t_article a
+        INNER JOIN t_classfication c ON a.class_id = c.class_id
+        <if test="tagId != null and tagId != 0">
+            INNER JOIN t_tag_article ta ON ta.article_id = a.article_id AND ta.tag_id = #{tagId}
+        </if>
+        <if test="classId != null and classId != 0">
+            AND a.class_id = #{classId}
+        </if>
+        WHERE a.`status` = 2 AND a.published = 1
+        order by a.create_time desc
+    </select>
+
+    <select id="getRecommendArticles" resultMap="articleInfoMap">
+        <include refid="SELECT_ACT"></include>
+        FROM t_article a
+        INNER JOIN t_classfication c ON a.class_id = c.class_id
+        where a.`status` = 2 AND a.published = 1 and a.recommend = 1 order by a.create_time desc limit 4
+    </select>
+
+    <sql id="prevAndNext">
+        select a.article_id, a.title, a.type, a.article_face, a.words, a.views,
+        a.recommend, a.status, a.published, a.sort, a.create_time, a.summary,
+        a.update_time, c.class_id, c.name, c.color
+        FROM t_article a
+        INNER JOIN t_classfication c ON a.class_id = c.class_id
+        where a.`status` = 2 AND a.published = 1
+    </sql>
+
+    <select id="getPrevArticle" resultMap="articleInfoMap">
+        <include refid="prevAndNext"/>
+        and a.article_id = (select max(article_id) from t_article where article_id &lt; #{id})
+    </select>
+
+    <select id="getNextArticle" resultMap="articleInfoMap">
+        <include refid="prevAndNext"/>
+        and a.article_id = (select min(article_id) from t_article where article_id &gt; #{id})
+    </select>
+
+    <sql id="getArticleByDate">
+        SELECT COUNT(a.article_id) as count , a.create_time as createTime FROM t_article a
+        WHERE a.`status` = 2 AND a.published = 1 and a.create_time >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) GROUP BY
+    </sql>
+
+    <select id="getArticleByDay" resultType="com.lht.admin.vo.ArticleDateVo">
+         <include refid="getArticleByDate"/> DAY(a.create_time)
+    </select>
+
+    <select id="getArticleByMonth" resultType="com.lht.admin.vo.ArticleDateVo">
+        <include refid="getArticleByDate"/> MONTH(a.create_time)
+    </select>
+</mapper>

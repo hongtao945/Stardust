@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="main-container">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">
+                        角色名
+                    </label>
+                    <div class="layui-input-block">
+                        <input type="text" id="roleName" name="roleName" th:value="${Role.roleName}" lay-verify="name" autocomplete="off" placeholder="请输入角色名" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">角色中文名</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="roleNameZh"  name="roleNameZh" th:value="${Role.roleNameZh}" lay-verify="name" autocomplete="off" placeholder="请输入角色中文名" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">描述</label>
+                    <div class="layui-input-block">
+                        <input type="text" id="remark" th:value="${Role.remark}"  name="remark" lay-verify="title" autocomplete="off" placeholder="请输入角色的描述" class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label">菜单分配</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" id="roleId" th:value="${Role.roleId}">
+                        <ul id="dataTree" class="dtree" data-id="0"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="pear-btn pear-btn-primary pear-btn-sm" lay-submit="" lay-filter="role-edit">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="pear-btn pear-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script>
+layui.use(['form','jquery', 'dtree'],function(){
+    let form = layui.form;
+    let $ = layui.jquery;
+    let dtree = layui.dtree;
+    let Dtree = null;
+    let roleId = $("#roleId").val();
+
+    Dtree = dtree.render({
+        elem: "#dataTree",
+        initLevel: "1",
+        width: "100%",
+        method: 'get',
+        dataStyle: "layuiStyle",
+        response: {message: "message", statusCode: 200},
+        url: "/api/menu/buildByRid/"+roleId,
+        dataFormat: "list",
+        checkbar: true, //开启复选框
+        checkbarType: "p-casc"
+    });
+    form.verify({
+        name: function(value){
+            if(value.length < 2){
+                return '角色名至少2个字符';
+            }
+        }
+    });
+
+    form.on('submit(role-edit)', function(data){
+        // 获取复选框数组的数据
+        let paramJsonArr = Dtree.getCheckbarJsonArrParam();
+        let ids = paramJsonArr['nodeId'];
+        let datas = data.field;
+        datas['menuIds'] = ids;
+        datas['roleId'] = roleId;
+        $.ajax({
+            url:'/api/role',
+            data:JSON.stringify(datas),
+            dataType:'json',
+            contentType:'application/json',
+            type:'put',
+            success:function(result){
+                if(result.code == 200){
+                    layer.msg(result.message,{icon:1,time:1000},function(){
+                        parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                        parent.layui.table.reload("user-table");
+                    });
+                }else{
+                    layer.msg(result.message,{icon:2,time:1000});
+                }
+            }
+        })
+        return false;
+    });
+})
+</script>
+</body>
+</html>

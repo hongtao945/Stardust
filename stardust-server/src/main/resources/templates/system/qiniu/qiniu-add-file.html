@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en"  xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>添加七牛云配置</title>
+    <header th:replace="header::html"></header>
+    <link rel="stylesheet" th:href="@{/admin/css/upload.css}" media="all" />
+    <style>
+        body {
+            background-color: #5f5555;
+        }
+    </style>
+</head>
+<body>
+<div class="mainBox">
+    <div class="main-container">
+        <div id="zyupload" class="zyupload"></div>
+    </div>
+</div>
+<script th:src="@{/admin/js/jquery.min.js}"></script>
+<script th:src="@{/admin/js/upload.js}" charset="utf-8"></script>
+<script>
+layui.use(['form','jquery'],function(){
+    let form = layui.form;
+    let $ = layui.jquery;
+
+    // 经调试知，多文件上传其实是分多次请求，一次只传输一个文件
+    $("#zyupload").zyUpload({
+        width: "650px",                 // 宽度
+        height: "400px",                 // 宽度
+        itemWidth: "140px",                 // 文件项的宽度
+        itemHeight: "115px",                 // 文件项的高度
+        url: "/api/qiniu",  // 上传文件的路径
+        fileType: ["jpg", "png", "jpeg", "gif", "md"],// 上传文件的类型
+        fileSize: 15728640,                // 上传文件的大小-15M
+        multiple: true,                    // 是否可以多个文件上传
+        dragDrop: true,                    // 是否可以拖动上传文件
+        tailor: true,                    // 是否可以裁剪图片
+        del: true,                    // 是否可以删除文件
+        finishDel: false,  				  // 是否在上传文件完成后删除预览
+        onSuccess: function (file, response) {          // 文件上传成功的回调方法
+            $("#uploadInf").append("<p>" + file.name + "上传成功！</p>");
+        },
+        onFailure: function (file, response) {          // 文件上传失败的回调方法
+            $("#uploadInf").append("<p>" + file.name + "上传失败！</p>");
+        },
+        onComplete: function (result) {           	  // 上传完成的回调方法
+            // alert(JSON.stringify(result));
+            layer.msg("上传成功!",{icon:1,time:1000},function(){
+                var parentLayer = parent.layer;
+                var iframeIndex = parentLayer.getFrameIndex(window.name);
+                parent.location.reload();
+                parentLayer.close(iframeIndex);
+            });
+        }
+    });
+})
+</script>
+
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>编辑公告</title>
+    <header th:replace="header::html"></header>
+</head>
+<body>
+<form class="layui-form" action="">
+    <div class="mainBox">
+        <div class="main-container">
+            <div class="layui-form-item">
+                <label class="layui-form-label required">
+                    公告内容
+                </label>
+                <div class="layui-input-block">
+                    <input type="text" id="noticeName" name="content" lay-verify="required" lay-reqtext="公告内容不能为空"
+                           autocomplete="off" placeholder="请输入公告内容" class="layui-input"
+                           th:value="${notice.noticeContent}">
+                </div>
+            </div>
+
+            <div class="layui-form-item">
+                <label class="layui-form-label required">是否显示</label>
+                <div class="layui-input-block">
+                    <input type="radio" name="display" value="true" title="是" checked="">
+                    <input type="radio" name="display" value="false" title="否">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="bottom">
+        <div class="button-container">
+            <button type="submit" class="pear-btn pear-btn-primary pear-btn-sm" lay-submit="" lay-filter="notice-edit">
+                <i class="layui-icon layui-icon-ok"></i>
+                提交
+            </button>
+            <button type="reset" class="pear-btn pear-btn-sm">
+                <i class="layui-icon layui-icon-refresh"></i>
+                重置
+            </button>
+        </div>
+    </div>
+</form>
+<script th:inline="javascript">
+    layui.use(['form', 'jquery'], function () {
+
+        let form = layui.form;
+        let $ = layui.jquery;
+
+        // 取得后端传过来的值
+        const notice = [[${notice}]];
+        $('.layui-form [name="display"]').val([notice.status]);
+
+        const URL = '/api/notice';
+        form.render('radio');
+
+
+
+        form.on('submit(notice-edit)', function (data) {
+            notice.noticeContent = data.field.content,
+            notice.status = data.field.display;
+            console.log(notice);
+            $.ajax({
+                url: URL,
+                data: JSON.stringify(notice),
+                dataType: 'json',
+                contentType: 'application/json',
+                type: 'put',
+                success: function (result) {
+                    if (result.code == 200) {
+                        layer.msg(result.message, {icon: 1, time: 1000}, function () {
+                            parent.layer.close(parent.layer.getFrameIndex(window.name));//关闭当前页
+                            parent.layui.table.reload("notice-table");
+                        });
+                    } else {
+                        layer.msg(result.message, {icon: 2, time: 1000});
+                    }
+                }
+            })
+            return false;
+        });
+    })
+</script>
+</body>
+</html>

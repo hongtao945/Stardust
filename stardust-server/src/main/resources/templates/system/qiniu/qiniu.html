@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta charset="utf-8">
+		<title>角色管理</title>
+		<header th:replace="header::html"></header>
+	</head>
+	<body class="pear-container">
+		<div class="layui-card">
+			<div class="layui-card-body">
+				<form class="layui-form" action="">
+					<div class="layui-form-item">
+						<div class="layui-form-item layui-inline">
+							<label class="layui-form-label">文件名</label>
+							<div class="layui-input-inline">
+								<input type="text" name="fileName" placeholder="输入文件名进行查询" class="layui-input">
+							</div>
+						</div>
+                        <div class="layui-inline">
+                            <label class="layui-form-label">日期范围</label>
+                            <div class="layui-input-inline">
+                                <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                                       name="dateRange">
+                            </div>
+                        </div>
+						<div class="layui-form-item layui-inline">
+							<button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="qiniu-query">
+								<i class="layui-icon layui-icon-search"></i>
+								查询
+							</button>
+							<button type="reset" class="pear-btn pear-btn-md">
+								<i class="layui-icon layui-icon-refresh"></i>
+								重置
+							</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+		<div class="layui-card">
+			<div class="layui-card-body">
+				<table id="qiniu-table" lay-filter="qiniu-table"></table>
+			</div>
+		</div>
+		
+		<script type="text/html" id="qiniu-toolbar">
+			<button class="layui-btn layui-btn-sm data-add-btn layui-btn-normal" lay-event="add"
+                    permission="sys:qiniu:add"><i class="layui-icon layui-icon-upload"></i>&nbsp;上传
+            </button>
+            <button class="layui-btn layui-btn-sm layui-btn-warm" lay-event="sync"
+                    permission="sys:qiniu:sync"><i class="layui-icon layui-icon-refresh"></i>&nbsp;同步
+            </button>
+            <button class="layui-btn layui-btn-sm" lay-event="config"
+                    permission="sys:qiniu:config"><i class="layui-icon layui-icon-set-fill"></i>&nbsp;配置
+            </button>
+			<button class="layui-btn layui-btn-sm layui-btn-danger data-delete-btn" lay-event="delete"
+                    permission="sys:qiniu:delete"><i class="layui-icon layui-icon-delete"></i>&nbsp;删除
+            </button>
+		</script>
+		
+		<script type="text/html" id="qiniu-bar">
+			<button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i></button>
+			<button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i></button>
+		</script>
+		
+<!--		<script type="text/html" id="qiniu-enable">-->
+<!--			<input type="checkbox" name="enable" value="{{d.id}}" lay-skin="switch" lay-text="启用|禁用" lay-filter="user-enable" checked = "{{ d.id == 10003 ? 'true' : 'false' }}">-->
+<!--		</script>-->
+<script th:src="@{/admin/js/jquery.min.js}"></script>
+<script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+		<script>
+		    layui.use(['table','form','jquery', 'laydate'],function () {
+		        let table = layui.table;
+		        let form = layui.form;
+		        let $ = layui.jquery;
+                let laydate = layui.laydate;
+		
+		        let MODULE_PATH = "/api/qiniu";
+
+                //日期范围
+                laydate.render({
+                    elem: '#date-range',
+                    range: '~',
+                    theme: 'molv'
+                });
+		
+		        let cols = [
+		            [
+		                {type:'checkbox', width: 50, fixed: "left"},
+						{
+                            title: '文件名', field: 'name', align:'center', width: 250, templet: function(data) {
+                                const name = data.name;
+                                const url = data.url;
+                                return '<a href='+ url + ' style="color: #10aec2;" target = "_blank">' + name +'</a>';
+                            }
+                        },
+		                {
+                            title: '预览图', width: 150, align:'center', templet: function(data) {
+                                const url = data.url;
+                                const fileType = data.fileType;
+                                if(fileType === '图片') {
+                                    return `<a onclick = "show_img(this)">
+                                                <img class="layui-nav-img" src="`+url+`"></img>
+                                            </a>`;
+                                } else {
+                                    return `<div class = "layui-nav-img">
+                                                <i class = "fa fa-file"></i>
+                                            </div>`;
+                                }
+                            }
+                        },
+                        {title: '文件类型', field: 'suffix', align:'center', width: 120, sort: true},
+                        {title: '类别', field: 'fileType', align:'center', width: 120, sort: true},
+                        {title: '文件大小', field: 'size', align:'center', width: 120, sort: true},
+                        {
+                            title: '链接地址', field: 'url', align:'center', width: 350, templet: function(data) {
+                                const url = data.url;
+                                return `<a class="clip-btn layui-btn-primary" data-clipboard-text="`+url+`">
+                                            <i class = "layui-icon layui-icon-link" alt="复制到剪切板"></i>
+                                        </a>&nbsp&nbsp;<span>`+url+'</span>';
+                            }
+                        },
+		                {title: '空间名称', field: 'bucket', align:'center', width: 200, sort: true},
+                        {title: '空间类型', field: 'type', align:'center', width: 120, sort: true},
+                        {title: '创建时间', field: 'updateTime', align:'center', minWidth: 200, sort: true}
+                    ]
+		        ]
+		
+		        table.render({
+		            elem: '#qiniu-table',
+		            url: '/api/qiniu',
+		            page: true ,
+		            cols: cols ,
+		            skin: 'line',
+		            toolbar: '#qiniu-toolbar',
+		            defaultToolbar: [{
+						title: '刷新',
+		                layEvent: 'refresh',
+		                icon: 'layui-icon-refresh',
+		            }, 'filter', 'print', 'exports'],
+					done: function() {
+						let clipboard = new ClipboardJS('.clip-btn');
+						clipboard.on('success', function(e) {
+							layer.msg('链接已复制到剪切板！',{icon:1,time:1000},function(){
+								e.clearSelection();
+							});
+						})
+					}
+		        });
+
+				// obj传进来的数据是我们从数据库查出来的那些，不仅仅是cols里展示出来的那些
+		        table.on('toolbar(qiniu-table)', function(obj){
+		            if(obj.event === 'add'){
+		                window.add();
+		            } else if(obj.event === 'refresh'){
+		                window.refresh();
+		            } else if(obj.event === 'sync') {
+                        window.sync();
+                    } else if(obj.event === 'config') {
+                        window.config(obj);
+                    } else if(obj.event === 'delete') {
+                        window.delete(obj);
+                    }
+		        });
+		
+		        form.on('submit(qiniu-query)', function(data){
+					let formData = data.field;
+					let dateRange = data.field.dateRange;
+					let dates = dateRange.split('~');
+					let startDate = dates[0];
+					let endDate = dates[1];
+		            table.reload(('qiniu-table'), {
+						page: {
+							curr: 1
+						},
+						where: {
+							name: formData.fileName,
+							startTime: startDate,
+							endTime: endDate
+						},
+						url: '/api/qiniu',
+						method: 'get'
+					});
+					return false;
+		        });
+		
+		        window.add = function(){
+		            layer.open({
+		                type: 2,
+		                title: '上传文件',
+		                shade: 0.1,
+		                area: ['1000px', '600px'],
+		                content: MODULE_PATH + '/add'
+		            });
+		        };
+
+				window.config = function() {
+					layer.open({
+		                type: 2,
+		                title: '新增配置',
+		                shade: 0.1,
+		                area: ['700px', '500px'],
+		                content: MODULE_PATH + '/config'
+		            });
+				};
+
+				window.sync = function() {
+					layer.confirm('确定要同步数据吗?', {icon: 3, title:'提示'}, function(index){
+		                layer.close(index);
+		                let loading = layer.load();
+		                $.ajax({
+		                    url: MODULE_PATH+'/sync',
+		                    type:'get',
+		                    success:function(result){
+		                        layer.close(loading);
+		                        if(result.code == 200){
+		                            layer.msg(result.message,{icon:1,time:1000},function(){
+		                                table.reload('qiniu-table');
+		                            });
+		                        }else{
+		                            layer.msg(result.message,{icon:2,time:1000});
+		                        }
+		                    }
+		                })
+		            });
+				};
+
+		        window.delete = function(obj){
+					let data = table.checkStatus(obj.config.id).data;
+					if(data.length === 0){
+						layer.msg("未选中数据",{icon:3,time:1000});
+						return false;
+					}
+					let ids = '';
+					data.forEach(v=> {
+						ids += ',' + v.id;
+					});
+					ids = ids.substring(1,ids.length);
+					layer.confirm('确定要删除这些文件吗?', {icon: 3, title:'提示'}, function(index){
+						layer.close(index);
+						let loading = layer.load();
+						$.ajax({
+							url: MODULE_PATH+"/batchRemove/"+ids,
+							dataType:'json',
+							type:'delete',
+							success:function(result){
+								layer.close(loading);
+								if(result.code == 200){
+									layer.msg(result.message,{icon:1,time:1000},function(){
+										table.reload('qiniu-table');
+									});
+								}else{
+									layer.msg(result.message,{icon:2,time:1000});
+								}
+							}
+						})
+					});
+				}
+
+		        window.refresh = function(){
+		            table.reload('qiniu-table');
+		        }
+		    });
+			//显示大图片
+			function show_img(t) {
+				var t = $(t).find("img");
+				//页面层
+				layer.open({
+					title: '图片',
+					type: 1,
+					shade: 0.2,
+					maxmin: true,
+					shadeClose: true,
+					area: ['80%', '80%'],
+					content: '<div style="text-align:center"><img src="' + $(t).attr('src') + '" /></div>'
+				});
+				$(window).on("resize", function () {
+					layer.full(index);
+				});
+			};
+		</script>
+	</body>
+</html>

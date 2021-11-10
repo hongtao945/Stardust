@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.lht.admin.mapper.ClassificationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.lht.admin.pojo.Classification">
+        <id column="class_id" property="classId" />
+        <result column="name" property="name" />
+        <result column="display" property="display" />
+        <result column="introduction" property="introduction" />
+        <result column="color" property="color" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        class_id, name, display, introduction, color, create_time, update_time
+    </sql>
+
+    <select id="getAllClassification" resultType="com.lht.admin.pojo.Classification">
+        SELECT c.class_id, c.name, c.color, c.create_time, COUNT(a.article_id) as articleCount
+        FROM t_classfication c LEFT JOIN t_article a ON c.class_id = a.class_id
+        WHERE a.`status` = 2 AND a.published = 1
+        GROUP BY c.class_id
+        ORDER BY COUNT(a.article_id) DESC;
+    </select>
+
+    <select id="fuzzyGetClassificationList" resultType="com.lht.admin.pojo.Classification">
+        SELECT c.class_id, c.name, c.display, c.introduction, c.color, c.create_time, c.update_time, COUNT(a.article_id) as articleCount
+        FROM t_classfication c LEFT JOIN t_article a on c.class_id = a.class_id
+        <if test="ew != null and ew.emptyOfWhere == false">
+            ${ew.customSqlSegment}
+        </if>
+        GROUP BY c.class_id
+    </select>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        SELECT
+            COUNT( DISTINCT c.class_id )
+        FROM
+            t_classfication c
+            INNER JOIN t_article a ON c.class_id = a.class_id
+        WHERE
+            a.`status` = 2
+            AND a.published = 1
+    </select>
+
+</mapper>

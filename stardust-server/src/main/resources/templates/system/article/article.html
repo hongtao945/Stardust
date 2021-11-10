@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:include="include :: header('文章管理')"/>
+</head>
+<body class="pear-container">
+<div class="layui-card">
+    <div class="layui-card-body">
+        <form class="layui-form" action=""  lay-filter="search-filter">
+            <div class="layui-form-item">
+                <div class="layui-form-item  layui-inline" >
+                    <label class="layui-form-label required">
+                        文章标题
+                    </label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="title" name="title" lay-verify="title" autocomplete="off" placeholder="请输入文章标题..." class="layui-input">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <label class="layui-form-label">文章分类</label>
+                    <div class="layui-input-inline">
+                        <select name="classId" lay-verify="verClassification" lay-search id="classification-select">
+                            <option value="0">所有</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">发布状态</label>
+                    <div class="layui-input-inline">
+                        <select name="published">
+                            <option value="" selected>所有</option>
+                            <option value="true">发布</option>
+                            <option value="false">草稿</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">文章类型</label>
+                    <div class="layui-input-inline">
+                        <select name="type">
+                            <option value="" selected>所有</option>
+                            <option value="1">原创</option>
+                            <option value="2">转载</option>
+                            <option value="3">翻译</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">审核状态</label>
+                    <div class="layui-input-inline">
+                        <select name="status">
+                            <option value="" selected>所有</option>
+                            <option value="0">审核未过</option>
+                            <option value="1">等待审核</option>
+                            <option value="2">审核通过</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">置顶</label>
+                    <div class="layui-input-inline">
+                        <select name="top">
+                            <option value="" selected>所有</option>
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">推荐</label>
+                    <div class="layui-input-inline">
+                        <select name="recommend">
+                            <option value="" selected>所有</option>
+                            <option value="true">是</option>
+                            <option value="false">否</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="layui-form-label">日期范围</label>
+                    <div class="layui-input-inline">
+                        <input type="text" class="layui-input" id="date-range" placeholder="不输入则忽略日期范围筛选"
+                               name="dateRange">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-inline">
+                    <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="article-query">
+                        <i class="layui-icon layui-icon-search"></i>
+                        查询
+                    </button>
+                    <button type="reset" class="pear-btn pear-btn-md">
+                        <i class="layui-icon layui-icon-refresh"></i>
+                        重置
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="layui-card">
+    <div class="layui-card-body">
+        <table id="article-table" lay-filter="article-table"></table>
+    </div>
+</div>
+
+<!--<script type="text/html" id="article-toolbar">-->
+<!--    <button class="pear-btn pear-btn-primary pear-btn-md" lay-event="add">-->
+<!--        <i class="layui-icon layui-icon-add-1"></i>-->
+<!--        新增-->
+<!--    </button>-->
+<!--    <button class="pear-btn pear-btn-danger pear-btn-md" lay-event="batchRemove">-->
+<!--        <i class="layui-icon layui-icon-delete"></i>-->
+<!--        删除-->
+<!--    </button>-->
+<!--</script>-->
+
+<script type="text/html" id="article-bar">
+    <button class="pear-btn pear-btn-primary pear-btn-sm" lay-event="edit"><i class="layui-icon layui-icon-edit"></i></button>
+    <button class="pear-btn pear-btn-warming pear-btn-sm" lay-event="power"><i class="layui-icon layui-icon-vercode"></i></button>
+    <button class="pear-btn pear-btn-danger pear-btn-sm" lay-event="remove"><i class="layui-icon layui-icon-delete"></i></button>
+</script>
+<th:block th:include="include :: footer"/>
+<script th:src="@{/admin/xm-select/xm-select.js}"></script>
+<script>
+    layui.use(['table','form','jquery', 'laydate'],function () {
+        let table = layui.table;
+        let form = layui.form;
+        let $ = layui.jquery;
+        let laydate = layui.laydate;
+
+        let MODULE_PATH = "/api/page/article";
+
+        //日期范围
+        laydate.render({
+            elem: '#date-range',
+            range: '~',
+            theme: 'molv'
+        });
+
+        // 获取分类列表
+        $.ajax({
+            url: '/api/page/classification/allClassification',
+            type: 'get',
+            success: function (result) {
+                if(result.code == 200) {
+                    $.each(result.data, function() {
+                        let classId = $(this)[0].classId;
+                        let name = $(this)[0].name;
+                        let Option = $('<option></option>').val(classId).text(name);
+                        $('#classification-select').append(Option);
+                    });
+                    form.render('select', 'search-filter')
+                }
+            }
+        });
+
+        // 表单验证
+        form.verify({
+            verTitle: function (value) {
+                if (value.length <= 0) {
+                    return '文章标题不能为空';
+                }
+                if (value.length > 100) {
+                    return '文章标题长度不能超过100';
+                }
+            },
+            verSummary: function (value) {
+                if (value.length > 100) {
+                    return '文章摘要长度不能超过100';
+                }
+            },
+            verContent: function () {
+                var content = editor.getMarkdown()
+                if (content.length <= 0) {
+                    return '文章内容不能为空';
+                }
+            },
+            verClassification: function (value) {
+                if (value == 0) {
+                    return '请选择一个分类';
+                }
+            },
+            verTag: function () {
+                if (tagSelect.getValue('value').length <= 0) {
+                    return '请选择至少一个标签';
+                }
+            }
+        });
+
+        let cols = [
+            [
+                {type:'checkbox', width: 50, fixed: 'left'},
+                {
+                    title: '文章标题', field: 'title', width: 250, templet: function(data) {
+                        let href = '/api/page/article/'+data.id;
+                        return '<a href='+ href + ' style="color: #01AAED;" target="_blank">'+ data.title + '</a>'
+                    }
+                },
+                {
+                    title: '封面', field: 'articleFace', width: 150, templet: function(data) {
+                        return '<img src = '+data.articleFace+'></img>';
+                    }
+                },
+                {
+                    title: '类型', field: 'type', sort: true, width: 80, align: 'center', templet: function(data) {
+                        let type = data.type === 1 ? '原创' : (data.type === 2 ? '转载':'翻译');
+                        let color = data.type === 1 ? 'green' : (data.type === 2 ? 'orange' : 'red');
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge '+bgColor+'">'+type+'</span>';
+                    }
+                },
+                {
+                    title: '分类', field: 'classification', width:150, align: 'center', sort: true, templet: function(data) {
+                        if(data.classification == null) {
+                            return '<span class = "layui-badge" style = "background-color: '+'red'+'; color = #666666">'+`无分类`+'</span>';
+                        }
+                        let className = data.classification.name;
+                        let color = data.classification.color;
+                        return '<span class = "layui-badge" style = "background-color: '+color+'; color = #666666">'+className+'</span>';
+                    }
+                },
+                {
+                    title: '标签', field: 'tagList', width:400, align: 'center', templet: function(data) {
+                        let tagListStr = ``;
+                        $.each(data.tagList, function() {
+                            let tagName = $(this)[0].name;
+                            let color = $(this)[0].color;
+                            const str = '<span class = "layui-badge" style = "background-color: '
+                            + color +'; color: #666666; margin-right: 3px">'+tagName+'</span>';
+                            tagListStr += str;
+                        })
+                        return tagListStr;
+                    }
+                },
+                {
+                    title: '发布状态', field: 'published', width:120, align: 'center', sort: true, templet: function(data) {
+                        let str = data.published ? '发布':'草稿';
+                        let color = data.published ? 'green': 'orange';
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge '+bgColor+'">'+str+'</span>';
+                    }
+                },
+                {
+                    title: '审核状态', field: 'status', width:100, align:'center', templet: function(data) {
+                        let color,str;
+                        const status = data.status;
+                        switch(status) {
+                            case 1: str = '等待审核', color = 'green'; break;
+                            case 2: str = '审核通过', color = 'blue'; break;
+                            case 0: str = '审核未过', color = 'red'; break;
+                            default: break;
+                        }
+                        const bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge '+bgColor+'">'+str+'</span>';
+                    }
+                },
+                {
+                    title: '推荐', field: 'recommend', width:80, align:'center', templet: (data)=> {
+                        let text = data.recommend ? '是' : '否';
+                        let color = data.recommend ? 'green' : 'orange';
+                        let bgColor = 'layui-bg-' + color;
+                        return '<span class="layui-badge ' + bgColor + '">' + text + '</span>';
+                    }
+                },
+                {
+                    title: '排序', field: 'sort', width: 80, align: 'center', sort: true, templet: function (data) {
+                        let sort = data.sort;
+                        return '<span class="layui-badge layui-bg-green">' + sort + '&nbsp;<i class="layui-icon layui-icon-star-fill"></i></span>'
+                    }
+                },
+                {
+                    title: '浏览量', field: 'views', width:100, align:'center', sort: true, templet: function (data) {
+                        const views = data.views;
+                        const color = views >= 500 ? 'red' : (views >= 100 ? 'orange' : 'green');
+                        const bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge '+bgColor+'">' + views + '</span>';
+                    }
+                },
+                {
+                    title: '评论数', field: 'comments', width:100, align:'center', sort: true, templet: function (data) {
+                        const comments = data.comments;
+                        const color = comments >= 10 ? 'red' : (comments >= 3 ? 'orange' : 'green');
+                        const bgColor = 'layui-bg-' + color;
+                        return '<span class = "layui-badge '+bgColor+'">' + comments + '</span>';
+                    }
+                },
+                {
+                    title: '作者', width:150, align:'center', sort: true, templet: function (data) {
+                        if(data.author != null)
+                            return data.author.nickname;
+                        else return '未知';
+                    }
+                },
+                {title: '创建时间', field: 'createTime', width:200, align:'center', sort: true},
+                {title: '更新时间', field: 'updateTime', width:200, align:'center', sort: true},
+                {title: '操作', toolbar: '#article-bar', align:'center', width:195, fixed: 'right'}
+            ]
+        ]
+
+        table.render({
+            elem: '#article-table',
+            url: '/api/page/article',
+            page: true ,
+            cols: cols ,
+            skin: 'line',
+            toolbar: '#article-toolbar',
+            defaultToolbar: [{
+                title: '刷新',
+                layEvent: 'refresh',
+                icon: 'layui-icon-refresh',
+            }, 'filter', 'print', 'exports']
+        });
+
+        table.on('tool(article-table)', function(obj){
+            if(obj.event === 'remove'){
+                window.remove(obj);
+            } else if(obj.event === 'edit'){
+                window.edit(obj);
+            } else if(obj.event === 'power'){
+                window.power(obj);
+            }
+        });
+
+        table.on('toolbar(article-table)', function(obj){
+            if(obj.event === 'add'){
+                window.add();
+            } else if(obj.event === 'refresh'){
+                window.refresh();
+            } else if(obj.event === 'batchRemove'){
+                window.batchRemove(obj);
+            }
+        });
+
+        form.on('submit(article-query)', function(data){
+            let formData = data.field;
+            let dateRange = data.field.dateRange;
+            let dates = dateRange.split('~');
+            let startDate = dates[0];
+            let endDate = dates[1];
+            table.reload(('article-table'), {
+                page: {
+                    curr: 1
+                },
+                where: {
+                    title: formData.title,
+                    type: formData.type,
+                    classId: formData.classId,
+                    published: formData.published,
+                    status: formData.status,
+                    recommend: formData.recommend,
+                    startDate: startDate,
+                    endDate: endDate,
+                },
+                url: '/api/page/article',
+                method: 'get'
+            });
+            return false;
+        });
+
+        form.on('switch(article-enable)', function(obj){
+            layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+        });
+
+        window.edit = function(obj){
+            let data = obj.data;
+            top.layui.admin.jump(29,"编辑文章",MODULE_PATH + '/article-edit?articleId='+data.articleId,false);
+        }
+
+        window.power = function(obj) {
+            let data = obj.data;
+            layer.open({
+                type: 2,
+                title: '审核',
+                shade: 0.1,
+                area: ['650px', '200px'],
+                content: '/api/page/article/toAudit?articleId=' + data.articleId
+            });
+        }
+
+        window.remove = function(obj){
+            layer.confirm('确定要删除该文章吗?', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+'/'+obj.data['articleId'],
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                obj.del();
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        // 批量删除没做
+        window.batchRemove = function(obj){
+            let data = table.checkStatus(obj.config.id).data;
+            if(data.length === 0){
+                layer.msg("未选中数据",{icon:3,time:1000});
+                return false;
+            }
+            let ids = "";
+            data.forEach(v=> {
+                ids += ',' + v.classId;
+            });
+            ids = ids.substr(1,ids.length);
+            layer.confirm('确定要删除这些文章吗？', {icon: 3, title:'提示'}, function(index){
+                layer.close(index);
+                let loading = layer.load();
+                $.ajax({
+                    url: MODULE_PATH+"/batchRemove/"+ids,
+                    dataType:'json',
+                    type:'delete',
+                    success:function(result){
+                        layer.close(loading);
+                        if(result.code == 200){
+                            layer.msg(result.message,{icon:1,time:1000},function(){
+                                table.reload('article-table');
+                            });
+                        }else{
+                            layer.msg(result.message,{icon:2,time:1000});
+                        }
+                    }
+                })
+            });
+        }
+
+        window.refresh = function(){
+            table.reload('article-table');
+        }
+    })
+</script>
+</body>
+</html>
