@@ -144,4 +144,14 @@
     <select id="getArticleByMonth" resultType="com.lht.admin.vo.ArticleDateVo">
         <include refid="getArticleByDate"/> MONTH(a.create_time)
     </select>
+
+    <select id="getArticleById" resultType="com.lht.admin.pojo.Article">
+        <include refid="SELECT_ACT"></include> , a.text_content, u.nickname
+        FROM t_article a
+        INNER JOIN t_classfication c ON a.class_id = c.class_id
+        INNER JOIN sys_user u on a.author_id = u.user_id
+        <if test="articleId != null">
+            where a.article_id = #{articleId}
+        </if>
+    </select>
 </mapper>

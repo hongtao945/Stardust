@@ -14,5 +14,10 @@ import com.lht.admin.pojo.ResponseBean;
  */
 public interface IQiniuConfigService extends IService<QiniuConfig> {
 
+    /**
+     * 添加或更新七牛云的配置
+     * @param qiniuConfig
+     * @return
+     */
     ResponseBean addConfig(QiniuConfig qiniuConfig);
 }

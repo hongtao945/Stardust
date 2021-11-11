@@ -31,8 +31,7 @@ public interface ArticleMapper extends BaseMapper<Article> {
     IPage<Article> fuzzyGetArticles(Page<Article> page, @Param("ew") QueryWrapper<Article> wrapper);
 
     /**
-     * 通过id获取文章信息
-     *
+     * 前端通过id获取文章信息， 没有原生的文本内容， 可加入redis缓存
      * @param articleId
      * @return
      */
@@ -84,4 +83,11 @@ public interface ArticleMapper extends BaseMapper<Article> {
      * @param id 文章id
      */
     void viewsIncrement(@Param("id") Long id);
+
+    /**
+     * 后台编辑文章时通过id获取文章， 没有html内容， 不加入缓存
+     * @param articleId
+     * @return
+     */
+    Article getArticleById(Long articleId);
 }

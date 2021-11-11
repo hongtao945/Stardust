@@ -220,4 +220,9 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
         elasticSearchService.save(article);
         return true;
     }
+
+    @Override
+    public Article getArticleById(Long articleId) {
+        return articleMapper.getArticleById(articleId);
+    }
 }

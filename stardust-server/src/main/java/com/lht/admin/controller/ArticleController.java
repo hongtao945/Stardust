@@ -65,7 +65,7 @@ public class ArticleController {
     @ApiOperation(value = "跳转到编辑文章页面")
     @SysLog("跳转到编辑文章页面")
     public String toEditArticle(Model model, Long articleId) {
-        model.addAttribute("article", articleService.getArticleInfoById(articleId));
+        model.addAttribute("article", articleService.getArticleById(articleId));
         return "system/article/article-addOrEdit";
     }
 

@@ -37,7 +37,7 @@ public interface IArticleService extends IService<Article> {
     RespondPageBean fuzzyGetArticles(Integer offset, Integer limit, ArticleQueryDto articleQueryDto);
 
     /**
-     * 通过id获取文章信息
+     * 前端通过id获取文章信息， 没有原生的文本内容， 可加入redis缓存
      * @param articleId
      * @return
      */
@@ -103,4 +103,11 @@ public interface IArticleService extends IService<Article> {
      * @return 是否成功
      */
     boolean audit(ArticleAuditDto articleAuditDto);
+
+    /**
+     * 后台编辑文章时通过id获取文章， 没有html内容， 不加入缓存
+     * @param articleId
+     * @return
+     */
+    Article getArticleById(Long articleId);
 }
