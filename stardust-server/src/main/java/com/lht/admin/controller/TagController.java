@@ -117,7 +117,7 @@ public class TagController {
     @SysLog("批量删除标签")
     public ResponseBean batchRemove(@PathVariable String tagIds) {
         List<Long> tagList = BatchRemoveUtils.getLongTypeListByStr(tagIds);
-        if (tagService.removeByIds(tagList)) {
+        if (tagService.removeTagsById(tagList)) {
             return ResponseBean.success("删除成功!");
         }
         return ResponseBean.error("删除失败！");

@@ -205,6 +205,10 @@
         }
 
         window.remove = function(obj){
+            if(obj.data.articleCount !== 0) {
+                layer.msg("该关联了文章，不可删除！",{icon:2,time:1000});
+                return;
+            }
             layer.confirm('确定要删除该分类吗', {icon: 3, title:'提示'}, function(index){
                 layer.close(index);
                 let loading = layer.load();
@@ -233,9 +237,18 @@
                 return false;
             }
             let ids = "";
+            let flag = false;
             data.forEach(v=> {
+                console.log(v.articleCount);
+                if (v.articleCount !== 0) {
+                    flag = true;
+                }
                 ids += ',' + v.classId;
             });
+            if(flag) {
+                layer.msg("有的分类关联了文章，不可删除",{icon:2,time:1000});
+                return;
+            }
             ids = ids.substr(1,ids.length);
             layer.confirm('确定要删除这些分类吗', {icon: 3, title:'提示'}, function(index){
                 layer.close(index);

@@ -59,4 +59,11 @@ public interface ITagService extends IService<Tag> {
      * @return 总条目数
      */
     Integer getCount();
+
+    /**
+     * 通过id批量删除标签
+     * @param tagList
+     * @return
+     */
+    boolean removeTagsById(List<Long> tagList);
 }
