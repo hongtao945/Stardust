@@ -218,7 +218,7 @@ export default {
         "/static/libs/meting.min.js",
       ];
       initRecommendArticles();
-      setTimeout(() => importLibs(libs), 100);
+      setTimeout(() => importLibs(libs), 150);
     });
 
     const importLibs = (libs: string[]): void => {

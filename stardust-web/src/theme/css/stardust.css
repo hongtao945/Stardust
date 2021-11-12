@@ -76,7 +76,7 @@ body,
 
 #vcomments textarea {
   box-sizing: border-box;
-  background: url("/static/images/dog2.jpg") 100% 100% no-repeat;
+  background: url("/static/images/dog2.gif") 100% 100% no-repeat;
 }
 
 #vcomments p {
