@@ -757,4 +757,7 @@ export default {
 @import url(./css/content.css);
 @import url(./css/share.min.css);
 @import url(./css/code-theme.css);
+code[class*="language-"], pre[class*="language-"] {
+  white-space: pre !important;
+}
 </style>
