@@ -146,6 +146,7 @@ Stardust是一个博客系统，后台基于Springboot + [PearAdmin](https://git
 * 数据库的编码格式为：utfmb4
 * 后台管理员的初始账号：admin , 密码：123456
 * 使用ElasticSearch时Maven依赖请与你安装的ElasticSearch版本保持一致，且ES需要自行安装IK分词器
+* Es中存储的索引模型保存在sql文件夹中，自行到kibana中加入ES
 
 ### 项目部署
 
