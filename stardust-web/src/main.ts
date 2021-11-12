@@ -1,6 +1,7 @@
 import { createApp } from "vue";
 import App from "./App.vue";
 import "materialize-css/dist/css/materialize.min.css";
+import "./theme/css/dark-mode.css";
 import "./theme/css/index.css";
 import "materialize-css/dist/js/materialize.min.js";
 import router from "./router";
@@ -46,6 +47,8 @@ import {
   faMusic,
   faChartBar,
   faFileWord,
+  faSun,
+  faMoon,
 } from "@fortawesome/free-solid-svg-icons";
 library.add(
   faHome,
@@ -87,7 +90,9 @@ library.add(
   faMusic,
   faAddressBook,
   faChartBar,
-  faFileWord
+  faFileWord,
+  faSun,
+  faMoon
 );
 
 // createApp

@@ -20,7 +20,7 @@ pre[class*="language-"] {
   -moz-hyphens: none;
   -ms-hyphens: none;
   hyphens: none;
-  background: #282c34; /* oneDark pro */
+  background: #282c34 !important; /* oneDark pro */
   color: #45eda0; 
 }
 

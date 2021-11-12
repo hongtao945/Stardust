@@ -105,14 +105,16 @@ export default {
         s.src = urls[i];
         document.body.appendChild(s);
       }
+
+      const mode = localStorage.getItem("isDark") === "1" ? "1" : "0";
+
       // 不是移动端才导入例子特效,不然移动端会比较卡
-      if(!navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i)){
+      if(!navigator.userAgent.match(/(iPhone|iPod|Android|ios)/i) && mode === '0'){
         const s = document.createElement("script");
         s.type = "text/javascript";
         s.setAttribute("color", "0, 0, 0");
         s.setAttribute("count", "170");
         s.setAttribute("opacity", "0.9");
-        // s.setAttribute("pointcolor", "123,231,255");
         s.setAttribute("zindex", "-100");
         s.src = "/static/libs/canvas-nest.min.js";
         document.body.appendChild(s);

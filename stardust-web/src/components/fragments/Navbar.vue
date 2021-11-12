@@ -7,7 +7,7 @@
         <!--LOGO-->
         <div class="brand-logo">
           <a class="waves-effect waves-light" href="/">
-            <img src="/static/images/logo.png" class="logo-img" alt="LOGO"> 
+            <img src="/static/images/logo.png" class="logo-img" alt="LOGO" />
             <span class="logo-span">&nbsp;Stardust</span>
           </a>
         </div>
@@ -52,10 +52,16 @@
             <a
               class="modal-trigger waves-effect waves-light"
               id="searchBtn"
-              style="zoom: 0.85;color: lightsalmon;"
+              style="zoom: 0.85; color: lightsalmon"
               href="#searchModal"
             >
               <font-awesome-icon :icon="['fas', 'search']" />
+            </a>
+          </li>
+          <li class="nav-show">
+            <a @click="switchMode">
+              <font-awesome-icon :icon="['fas', 'moon']" v-show="mode === '0'" />
+              <font-awesome-icon :icon="['fas', 'sun']" v-show="mode === '1'" />
             </a>
           </li>
         </ul>
@@ -159,14 +165,55 @@
 </template>
 
 <script lang="ts">
-import { onBeforeMount, onMounted } from "@vue/runtime-core";
+import { onBeforeMount, ref } from "@vue/runtime-core";
 import { METHOD, request } from "../../utils/api";
 import SearchModal from "./SearchModal.vue";
 export default {
   setup() {
+
+    const mode = ref(localStorage.getItem("isDark") === "1" ? "1" : "0");
+
     onBeforeMount(() => {
       request("/front/increment", METHOD.GET);
+      // 是否是黑夜模式
+      "1" === localStorage.getItem("isDark")
+        ? ($("body").addClass("DarkMode"))
+        : "0" === localStorage.getItem("isDark")
+        ? $("#modeicon").attr("xlink:href", "#icon-moon")
+        : new Date().getHours() >= 20 || new Date().getHours() < 7
+        ? ($("body").addClass("DarkMode"))
+        : matchMedia("(prefers-color-scheme: dark)").matches
+        ? ($("body").addClass("DarkMode"))
+        : null;
     });
+
+    const switchMode = (): void => {
+      if(mode.value === '0') {
+        mode.value = '1';        
+      } else {
+        mode.value = '0';
+      }
+      $(
+        '<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>'
+      ).appendTo($("body")),
+        setTimeout(function () {
+          $("body").hasClass("DarkMode")
+            ? ($("body").removeClass("DarkMode"),
+              localStorage.setItem("isDark", "0"))
+            : ($("body").addClass("DarkMode"),
+              localStorage.setItem("isDark", "1")),
+            setTimeout(function () {
+              $(".Cuteen_DarkSky").fadeOut(1e3, function () {
+                $(this).remove();
+              });
+            }, 2e3);
+        });
+    };
+
+    return {
+      mode,
+      switchMode,
+    }
   },
   components: { SearchModal },
 };
