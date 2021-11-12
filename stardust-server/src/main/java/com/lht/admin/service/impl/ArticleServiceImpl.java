@@ -145,7 +145,7 @@ public class ArticleServiceImpl extends ServiceImpl<ArticleMapper, Article> impl
     }
 
     @Override
-    @Cacheable
+//    @Cacheable 加入缓存后会使得浏览量在缓存失效后才能更新
     public Article getArticleInfoById(Long articleId) {
         return articleMapper.getArticleInfoById(articleId);
     }
