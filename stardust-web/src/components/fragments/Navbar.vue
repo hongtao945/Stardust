@@ -60,8 +60,8 @@
           </li>
           <li class="nav-show">
             <a @click="switchMode">
-              <font-awesome-icon :icon="['fas', 'moon']" v-show="mode === '0'" />
-              <font-awesome-icon :icon="['fas', 'sun']" v-show="mode === '1'" />
+              <font-awesome-icon :icon="['fas', 'moon']" v-if="mode === '0'" />
+              <font-awesome-icon :icon="['fas', 'sun']" v-else />
             </a>
           </li>
         </ul>
@@ -171,7 +171,7 @@ import SearchModal from "./SearchModal.vue";
 export default {
   setup() {
 
-    const mode = ref(localStorage.getItem("isDark") === "1" ? "1" : "0");
+    const mode = ref<string>(localStorage.getItem("isDark") === "1" ? "1" : "0");
 
     onBeforeMount(() => {
       request("/front/increment", METHOD.GET);
@@ -188,11 +188,6 @@ export default {
     });
 
     const switchMode = (): void => {
-      if(mode.value === '0') {
-        mode.value = '1';        
-      } else {
-        mode.value = '0';
-      }
       $(
         '<div class="Cuteen_DarkSky"><div class="Cuteen_DarkPlanet"></div></div>'
       ).appendTo($("body")),
@@ -208,6 +203,7 @@ export default {
               });
             }, 2e3);
         });
+        mode.value = localStorage.getItem("isDark") === "0" ? "1" : "0";
     };
 
     return {
