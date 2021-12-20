@@ -4,11 +4,9 @@ package com.lht.admin.controller;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.lht.admin.dto.ArticleAuditDto;
 import com.lht.admin.dto.ArticleQueryDto;
-import com.lht.admin.pojo.Article;
-import com.lht.admin.pojo.PageTableRequest;
-import com.lht.admin.pojo.RespondPageBean;
-import com.lht.admin.pojo.ResponseBean;
+import com.lht.admin.pojo.*;
 import com.lht.admin.service.IArticleService;
+import com.lht.admin.service.ITagArticleService;
 import com.lht.annotation.SysLog;
 import com.lht.constant.Constant;
 import com.lht.utils.JsonUtils;
@@ -38,6 +36,8 @@ public class ArticleController {
 
     @Resource
     private IArticleService articleService;
+    @Resource
+    private ITagArticleService tagArticleService;
 
     @GetMapping("/index")
     @ApiOperation(value = "跳转到文章管理页面")
@@ -123,7 +123,7 @@ public class ArticleController {
     @ResponseBody
     @SysLog("删除一篇文章")
     public ResponseBean delete(@PathVariable Long id) {
-        if (articleService.delete(id)) {
+        if (tagArticleService.remove(new QueryWrapper<TagArticle>().eq("article_id", id)) && articleService.delete(id)) {
             return ResponseBean.success("删除成功!");
         }
         return ResponseBean.error("删除失败!");
