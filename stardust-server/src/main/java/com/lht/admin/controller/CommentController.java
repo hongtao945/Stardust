@@ -50,7 +50,7 @@ public class CommentController {
     @SysLog("删除留言")
     public ResponseBean deleteById(@PathVariable("id") Long id) {
         UpdateWrapper<Comment> wrapper = new UpdateWrapper<>();
-        wrapper.eq("message_id", id).set("is_delete", true).set("content", "该留言已被管理员删除！");
+        wrapper.eq("comment_id", id).set("is_delete", true).set("content", "该评论已被管理员删除！");
         if (commentService.update(wrapper)) {
             return ResponseBean.success("删除成功!");
         }

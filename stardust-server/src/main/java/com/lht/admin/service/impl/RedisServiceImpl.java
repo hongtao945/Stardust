@@ -67,9 +67,11 @@ public class RedisServiceImpl implements IRedisService {
             String key = RedisConstant.TODAY_VIEWS_PRE + LocalDate.now().minusDays(i);
             if (redisTemplate.hasKey(key)) {
                 Integer count = (Integer) redisTemplate.opsForValue().get(key);
-                counts.add(count);
-                days.add(LocalDate.now().minusDays(i));
+                counts.add(count + 1);
+            } else {
+                counts.add(0);
             }
+            days.add(LocalDate.now().minusDays(i));
         }
         ViewsDateVo viewsDateVo = new ViewsDateVo();
         viewsDateVo.setCounts(counts);

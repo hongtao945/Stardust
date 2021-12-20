@@ -316,10 +316,9 @@
                           </span>
                         </div>
                         <div
-                          class="vcontent"
-                          :style="comment.isDelete ? 'color:red' : ''"
+                          class="vcontent"                         
                         >
-                          <p>{{ comment.content }}</p>
+                          <p :style="comment.isDelete ? 'color:red' : ''">{{ comment.content }}</p>
                         </div>
                         <div
                           class="vquote"

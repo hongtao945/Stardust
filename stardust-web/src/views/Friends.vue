@@ -175,10 +175,9 @@
                       </span>
                     </div>
                     <div
-                      class="vcontent"
-                      :style="message.isDelete ? 'color:red' : ''"
+                      class="vcontent"                      
                     >
-                      <p>{{ message.content }}</p>
+                      <p :style="message.isDelete ? 'color:red' : ''">{{ message.content }}</p>
                     </div>
                     <div
                       class="vquote"

@@ -145,7 +145,7 @@
         <include refid="getArticleByDate"/> MONTH(a.create_time)
     </select>
 
-    <select id="getArticleById" resultType="com.lht.admin.pojo.Article">
+    <select id="getArticleById" resultMap="articleInfoMap">
         <include refid="SELECT_ACT"></include> , a.text_content, u.nickname
         FROM t_article a
         INNER JOIN t_classfication c ON a.class_id = c.class_id
