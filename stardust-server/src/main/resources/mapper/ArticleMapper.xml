@@ -80,6 +80,7 @@
             ${ew.customSqlSegment}
         </if>
         GROUP BY (a.article_id)
+        ORDER BY a.article_id DESC
     </select>
 
     <select id="getArticleInfoById" resultMap="articleInfoMap">

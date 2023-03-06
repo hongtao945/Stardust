@@ -192,6 +192,6 @@ public class ElasticSearchServiceImpl implements IElasticSearchService {
     public void sync() {
         this.deleteAll();
         List<Article> articles = articleMapper.selectList(null);
-        articles.forEach(article -> this.save(article));
+        articles.forEach(this::save);
     }
 }

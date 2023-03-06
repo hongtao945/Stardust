@@ -11,6 +11,7 @@ import com.lht.admin.pojo.RespondPageBean;
 import com.lht.admin.pojo.ResponseBean;
 import com.lht.admin.service.IQiniuContentService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lht.exception.BadRequestException;
 import com.lht.utils.FileUtil;
 import com.lht.utils.JsonUtils;
 import com.lht.utils.QiniuUtils;
@@ -191,8 +192,6 @@ public class QiniuContentServiceImpl extends ServiceImpl<QiniuContentMapper, Qin
                     //ignore
                 }
             }
-        } catch (UnsupportedEncodingException ex) {
-            //ignore
         } catch (IOException e) {
             e.printStackTrace();
         }
