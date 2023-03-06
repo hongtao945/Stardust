@@ -101,7 +101,8 @@
                   </div>
                 </div>
               </div>
-              <div class="dream">
+              <!-- 音乐 -->
+              <!-- <div class="dream">
                 <div class="title center-align">
                   <font-awesome-icon :icon="['fa', 'music']" />&nbsp;&nbsp;音乐
                 </div>
@@ -114,7 +115,7 @@
                   >
                   </meting-js>
                 </div>
-              </div>
+              </div> -->
               <!-- 推荐文章 -->
               <div class="recommend" id="recommend-sections" data-aos="fade-up">
                 <div class="title">
@@ -207,9 +208,9 @@ import {
 import { Article } from "../types/model";
 export default {
   setup() {
-    onBeforeMount(() => {
-      importLibs(["/static/libs/APlayer.min.js"]);
-    });
+    // onBeforeMount(() => {
+    //   importLibs(["/static/libs/APlayer.min.js"]);
+    // });
 
     onMounted(() => {
       // 节点挂载好后引入script
@@ -257,7 +258,7 @@ export default {
 </script>
 
 <style>
-@import url(../theme/css/APlayer.min.css);
+/* @import url(../theme/css/APlayer.min.css); */
 .stardust-desc {
   background-color: rgba(0, 0, 0, 0.3);
   position: absolute;
